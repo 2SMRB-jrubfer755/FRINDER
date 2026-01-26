@@ -1,9 +1,0 @@
-
-{
-  "name": "FRINDER - Connect & Level Up",
-  "description": "The ultimate social platform for gamers to find teammates, compete in tournaments, and win rewards. Match with players based on your favorite titles, playstyle, and vibe.",
-  "requestFramePermissions": [
-    "camera",
-    "microphone"
-  ]
-}
