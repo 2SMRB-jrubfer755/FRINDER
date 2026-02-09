@@ -1,20 +1,36 @@
 <div align="center">
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
 </div>
+Frinder
 
-# Run and deploy your AI Studio app
+Frinder es una aplicación pensada para conectar personas de forma sencilla, humana y natural. Nace con la idea de facilitar el encuentro entre personas afines, reduciendo la fricción típica de otras plataformas y poniendo el foco en la experiencia real del usuario.
 
-This contains everything you need to run your app locally.
+La app apuesta por la cercanía, la autenticidad y la utilidad práctica: encontrar a las personas adecuadas en el momento adecuado, sin complicaciones innecesarias.
 
-View your app in AI Studio: https://ai.studio/apps/temp/1
+¿Qué es Frinder?
 
-## Run Locally
+Frinder combina descubrimiento inteligente y diseño intuitivo para ayudarte a encontrar personas con intereses compatibles, ya sea para amistad, planes, networking u otros tipos de conexión social. Todo desde una interfaz clara y accesible.
 
-**Prerequisites:**  Node.js
+No se trata solo de hacer match, sino de crear conexiones que tengan sentido.
 
+Filosofía del producto
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+• Simplicidad antes que saturación de funciones • Experiencias reales por encima de métricas vacías • Respeto por el tiempo y la privacidad del usuario • Diseño limpio, moderno y centrado en personas
+
+¿Para quién es Frinder?
+
+Frinder está pensada para personas que quieren conocer gente nueva sin sentirse atrapadas en dinámicas artificiales. Usuarios que valoran las conexiones auténticas, la transparencia y una experiencia digital bien cuidada.
+
+Principales características
+
+• Descubrimiento de personas de forma intuitiva • Perfiles claros y directos • Experiencia rápida y sin fricción • Enfoque en afinidad real y no solo en apariencia
+
+Visión
+
+Frinder busca convertirse en una referencia en la forma en la que las personas se descubren y conectan digitalmente. Una app que se sienta cercana, útil y honesta, y que evolucione junto a su comunidad.
+
+Estado del proyecto
+
+Frinder se encuentra en desarrollo activo. La visión es crecer de forma progresiva, escuchando a los usuarios y priorizando siempre la calidad de la experiencia.
+
+Frinder — encuentra a las personas que encajan contigo.
