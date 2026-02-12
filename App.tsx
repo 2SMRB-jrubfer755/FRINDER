@@ -131,20 +131,55 @@ const App: React.FC = () => {
     return dict[key] || TRANSLATIONS['English'][key] || key;
   };
 
-  const handleCompleteOnboarding = (data: any) => {
-    setUserProfile(prev => ({
-      ...prev,
-      name: data.name || prev.name,
-      avatar: data.avatar || prev.avatar,
-      preferences: {
-        ...prev.preferences,
-        ageRange: [data.minAge || 18, data.maxAge || 99],
-        distanceMax: data.distance || 100,
-        favoriteGames: data.games || []
-      }
-    }));
-    // Logic to create user in backend could go here
-    setAppState('main');
+  const handleCompleteOnboarding = async (data: any) => {
+    // Map onboarding data to User model
+    const newUserHelper: Partial<User> = {
+      name: data.name,
+      age: 20, // Default as not in form
+      gender: 'Other' as any, // Default
+      distance: 0,
+      bio: "Ready to play!",
+      avatar: data.avatar,
+      favoriteGames: data.games || [],
+      gameTypes: [], // Default
+      isOnline: true,
+      personality: data.skills ? data.skills.join(', ') : 'Gamer',
+      languages: ['Spanish'],
+      discord: data.name.replace(/\s/g, '').toLowerCase() + '#0000',
+    };
+
+    try {
+      const createdUser = await api.users.create(newUserHelper);
+      console.log("User created:", createdUser);
+
+      setUserProfile(prev => ({
+        ...prev,
+        name: createdUser.name,
+        avatar: createdUser.avatar,
+        preferences: {
+          ...prev.preferences,
+          ageRange: [data.minAge || 18, data.maxAge || 99],
+          distanceMax: data.distance || 100,
+          favoriteGames: data.games || []
+        }
+      }));
+      setAppState('main');
+    } catch (err) {
+      console.error("Failed to create user in backend, falling back to local state", err);
+      // Fallback
+      setUserProfile(prev => ({
+        ...prev,
+        name: data.name || prev.name,
+        avatar: data.avatar || prev.avatar,
+        preferences: {
+          ...prev.preferences,
+          ageRange: [data.minAge || 18, data.maxAge || 99],
+          distanceMax: data.distance || 100,
+          favoriteGames: data.games || []
+        }
+      }));
+      setAppState('main');
+    }
   };
 
   const handleMatch = (user: User) => {
