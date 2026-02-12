@@ -17,7 +17,9 @@ const GroupSchema: Schema = new Schema({
     game: { type: String, required: true },
     isPrivate: { type: Boolean, default: false }
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
 export default mongoose.model<IGroup>('Group', GroupSchema);

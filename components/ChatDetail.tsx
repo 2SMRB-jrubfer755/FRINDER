@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Message, Chat } from '../types';
 import { getGamerResponse } from '../services/geminiService';
+import { api } from '../services/api';
 
 interface ChatDetailProps {
   chat: Chat;
@@ -31,26 +32,51 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBa
       timestamp: Date.now()
     };
 
-    onSendMessage(chat.id, userMessage);
-    setInputText('');
-    setIsTyping(true);
+    try {
+      const updatedChat = await api.chats.sendMessage({
+        chatId: chat.id,
+        participants: chat.participants,
+        message: userMessage
+      });
 
-    // AI Gamer Response
-    const history = chat.messages.map(m => ({
-      role: m.senderId === 'me' ? 'user' : 'model',
-      parts: [{ text: m.text }]
-    }));
+      // Notify parent to update chat list/state
+      // For now, we rely on the fact that if we re-fetch or if the parent updates, it shows.
+      // But ChatDetail props 'chat' comes from parent. 
+      // Ideally we should call a prop onSendMessage that updates the parent state.
+      onSendMessage(chat.id, userMessage);
 
-    const aiText = await getGamerResponse(user.name, user.bio, history, inputText);
-    
-    setIsTyping(false);
-    onSendMessage(chat.id, {
-      id: (Date.now() + 1).toString(),
-      senderId: user.id,
-      text: aiText,
-      timestamp: Date.now(),
-      isAi: true
-    });
+      setInputText('');
+      setIsTyping(true);
+
+      // AI Gamer Response (Mocked for now as we don't have a backend for AI yet, or we could call backend)
+      // For this migration, we keep the client-side AI mock response but send it to DB too.
+      const history = chat.messages.map(m => ({
+        role: m.senderId === 'me' ? 'user' : 'model',
+        parts: [{ text: m.text }]
+      }));
+
+      const aiText = await getGamerResponse(user.name, user.bio, history, inputText);
+
+      setIsTyping(false);
+
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        senderId: user.id,
+        text: aiText,
+        timestamp: Date.now(),
+        isAi: true
+      };
+
+      await api.chats.sendMessage({
+        chatId: chat.id,
+        participants: chat.participants,
+        message: aiMessage
+      });
+
+      onSendMessage(chat.id, aiMessage);
+    } catch (e) {
+      console.error("Failed to send message", e);
+    }
   };
 
   return (
@@ -72,7 +98,7 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBa
       </header>
 
       {/* Messages */}
-      <div 
+      <div
         ref={scrollRef}
         className="flex-1 overflow-y-auto p-6 space-y-4 no-scrollbar"
       >
@@ -82,14 +108,14 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBa
           </div>
         )}
         {chat.messages.map((m) => (
-          <div 
-            key={m.id} 
+          <div
+            key={m.id}
             className={`flex ${m.senderId === 'me' ? 'justify-end' : 'justify-start'}`}
           >
             <div className={`
               max-w-[80%] px-4 py-3 rounded-2xl text-sm font-medium leading-relaxed
-              ${m.senderId === 'me' 
-                ? 'bg-primary text-white rounded-br-none shadow-lg shadow-primary/20' 
+              ${m.senderId === 'me'
+                ? 'bg-primary text-white rounded-br-none shadow-lg shadow-primary/20'
                 : 'glass border border-accent/10 text-accent rounded-bl-none'}
             `}>
               {m.text}
@@ -111,14 +137,14 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBa
       <div className="p-4 border-t border-accent/10">
         <div className="glass flex items-center px-4 py-2 rounded-2xl border border-accent/20 focus-within:border-primary transition-all">
           <button className="mr-3 opacity-50 text-xl">📎</button>
-          <input 
+          <input
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && handleSend()}
             placeholder="Type a message..."
             className="flex-1 bg-transparent border-none outline-none text-accent placeholder:text-accent/30 py-2"
           />
-          <button 
+          <button
             onClick={handleSend}
             disabled={!inputText.trim()}
             className="ml-3 bg-primary w-10 h-10 rounded-xl flex items-center justify-center disabled:opacity-30 transition-opacity"

@@ -27,7 +27,9 @@ const ChatSchema: Schema = new Schema({
     messages: [MessageSchema],
     lastMessage: { type: String }
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
 export default mongoose.model<IChat>('Chat', ChatSchema);

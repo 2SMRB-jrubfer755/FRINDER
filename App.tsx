@@ -107,9 +107,8 @@ const App: React.FC = () => {
         const fetchedGroups = await api.groups.getAll();
         setGroups(fetchedGroups);
 
-        // Ideally fetch chats for current user, but for now we initialize empty or mocked if needed
-        // const fetchedChats = await api.chats.getByUserId('me'); 
-        // setChats(fetchedChats);
+        const fetchedChats = await api.chats.getByUserId('me');
+        setChats(fetchedChats);
       } catch (error) {
         console.error("Failed to fetch data, falling back to empty or mock if implemented", error);
         // Fallback for demo purposes if server is not running
@@ -257,7 +256,7 @@ const App: React.FC = () => {
     switch (activeTab) {
       case 'discover': return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} />;
       case 'chat': return <ChatList users={users} chats={chats} onSelectChat={setActiveChatId} />;
-      case 'groups': return <Groups groups={groups} onAddGroup={handleAddGroup} t={t} />;
+      case 'groups': return <Groups groups={groups} users={users} onAddGroup={handleAddGroup} t={t} />;
       case 'rewards': return <Rewards />;
       case 'settings': return <Settings userProfile={userProfile} onUpdateProfile={(u) => setUserProfile(p => ({ ...p, ...u }))} t={t} onShowPremium={() => setShowPremium(true)} />;
       default: return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} />;

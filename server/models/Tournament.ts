@@ -17,7 +17,9 @@ const TournamentSchema: Schema = new Schema({
     image: { type: String, required: true },
     partner: { type: String, required: true }
 }, {
-    timestamps: true
+    timestamps: true,
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true }
 });
 
 export default mongoose.model<ITournament>('Tournament', TournamentSchema);
