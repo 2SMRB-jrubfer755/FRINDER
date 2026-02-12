@@ -11,7 +11,7 @@ import Onboarding from './components/Onboarding';
 import LandingPage from './components/LandingPage';
 import PremiumOverlay from './components/PremiumOverlay';
 import { User, Chat, Message, Group, UserPreferences } from './types';
-import { MOCK_USERS, MOCK_GROUPS } from './data/mockData';
+import { api } from './services/api';
 
 const TRANSLATIONS: Record<string, Record<string, string>> = {
   English: {
@@ -71,11 +71,12 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 const App: React.FC = () => {
   const [appState, setAppState] = useState<'splash' | 'landing' | 'onboarding' | 'main'>('splash');
   const [activeTab, setActiveTab] = useState('discover');
+  const [users, setUsers] = useState<User[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
-  const [groups, setGroups] = useState<Group[]>(MOCK_GROUPS);
+  const [groups, setGroups] = useState<Group[]>([]);
   const [showPremium, setShowPremium] = useState(false);
-  
+
   const [userProfile, setUserProfile] = useState({
     name: 'Player One',
     avatar: 'https://i.pravatar.cc/300?u=1',
@@ -97,6 +98,33 @@ const App: React.FC = () => {
     return () => clearTimeout(timer);
   }, []);
 
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const fetchedUsers = await api.users.getAll();
+        setUsers(fetchedUsers);
+
+        const fetchedGroups = await api.groups.getAll();
+        setGroups(fetchedGroups);
+
+        // Ideally fetch chats for current user, but for now we initialize empty or mocked if needed
+        // const fetchedChats = await api.chats.getByUserId('me'); 
+        // setChats(fetchedChats);
+      } catch (error) {
+        console.error("Failed to fetch data, falling back to empty or mock if implemented", error);
+        // Fallback for demo purposes if server is not running
+        import('./data/mockData').then(module => {
+          setUsers(module.MOCK_USERS);
+          setGroups(module.MOCK_GROUPS);
+        });
+      }
+    };
+
+    if (appState === 'main') {
+      fetchData();
+    }
+  }, [appState]);
+
   const t = (key: string) => {
     const lang = userProfile.language || 'English';
     const dict = TRANSLATIONS[lang] || TRANSLATIONS['English'];
@@ -115,6 +143,7 @@ const App: React.FC = () => {
         favoriteGames: data.games || []
       }
     }));
+    // Logic to create user in backend could go here
     setAppState('main');
   };
 
@@ -127,6 +156,12 @@ const App: React.FC = () => {
         messages: []
       };
       setChats(prev => [newChat, ...prev]);
+
+      // Persist match/chat
+      api.chats.sendMessage({
+        participants: ['me', user.id],
+        message: null
+      }).catch(err => console.error("Failed to create chat in backend", err));
     }
     setActiveTab('chat');
   };
@@ -136,6 +171,27 @@ const App: React.FC = () => {
       if (chat.id === chatId) return { ...chat, messages: [...chat.messages, message] };
       return chat;
     }));
+
+    // Persist message
+    const chat = chats.find(c => c.id === chatId);
+    if (chat) {
+      api.chats.sendMessage({
+        chatId: chat.id,
+        participants: chat.participants,
+        message: message
+      }).catch(err => console.error("Failed to send message to backend", err));
+    }
+  };
+
+  const handleAddGroup = async (group: Group) => {
+    try {
+      const newGroup = await api.groups.create(group);
+      setGroups(prev => [newGroup, ...prev]);
+    } catch (err) {
+      console.error("Failed to create group", err);
+      // Optimistic update
+      setGroups(prev => [group, ...prev]);
+    }
   };
 
   if (appState === 'splash') {
@@ -157,19 +213,19 @@ const App: React.FC = () => {
   const renderScreen = () => {
     if (activeChatId) {
       const chat = chats.find(c => c.id === activeChatId);
-      const user = MOCK_USERS.find(u => u.id === (chat?.participants[0]));
+      const user = users.find(u => u.id === (chat?.participants[0]));
       if (chat && user) {
         return <ChatDetail chat={chat} user={user} onSendMessage={handleSendMessage} onBack={() => setActiveChatId(null)} />;
       }
     }
 
     switch (activeTab) {
-      case 'discover': return <Discover onMatch={handleMatch} preferences={userProfile.preferences} />;
-      case 'chat': return <ChatList users={MOCK_USERS} chats={chats} onSelectChat={setActiveChatId} />;
-      case 'groups': return <Groups groups={groups} onAddGroup={(g) => setGroups(prev => [g, ...prev])} t={t} />;
+      case 'discover': return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} />;
+      case 'chat': return <ChatList users={users} chats={chats} onSelectChat={setActiveChatId} />;
+      case 'groups': return <Groups groups={groups} onAddGroup={handleAddGroup} t={t} />;
       case 'rewards': return <Rewards />;
-      case 'settings': return <Settings userProfile={userProfile} onUpdateProfile={(u) => setUserProfile(p => ({...p, ...u}))} t={t} onShowPremium={() => setShowPremium(true)} />;
-      default: return <Discover onMatch={handleMatch} preferences={userProfile.preferences} />;
+      case 'settings': return <Settings userProfile={userProfile} onUpdateProfile={(u) => setUserProfile(p => ({ ...p, ...u }))} t={t} onShowPremium={() => setShowPremium(true)} />;
+      default: return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} />;
     }
   };
 
