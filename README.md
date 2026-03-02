@@ -1,5 +1,5 @@
 <div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
+<img width="1200" height="475" alt="GHBanner" src="https://github.com/2SMRB-jrubfer755/FRINDER/blob/f2fef553e38a883e60a25f121a5434f07b5492bb/FRINDER_LOGO.png" />
 </div>
 Frinder
 
