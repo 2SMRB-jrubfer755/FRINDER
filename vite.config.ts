@@ -15,7 +15,7 @@ export default defineConfig(() => {
         },
       },
       preview: {
-        port: 4173,
+        port: 3000,
         host: '0.0.0.0',
         allowedHosts: ['frinder.servegame.com'],
       },
