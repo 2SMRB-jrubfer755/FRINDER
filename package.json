@@ -5,17 +5,21 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "dev:backend": "npm --prefix server run start",
+    "dev:full": "concurrently -k -n FRONT,BACK \"npm run dev\" \"npm run dev:backend\"",
+    "free-ports": "bash -c 'fuser -k 3000/tcp 5000/tcp >/dev/null 2>&1 || true'",
+    "start:app": "npm run free-ports && npm run dev:full",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
     "react": "^19.2.3",
-    "@google/genai": "^1.38.0",
     "react-dom": "^19.2.3"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "concurrently": "^9.2.1",
     "typescript": "~5.8.2",
     "vite": "^6.2.0"
   }

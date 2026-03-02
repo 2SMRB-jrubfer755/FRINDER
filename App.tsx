@@ -71,6 +71,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 const App: React.FC = () => {
   const [appState, setAppState] = useState<'splash' | 'landing' | 'onboarding' | 'main'>('splash');
   const [activeTab, setActiveTab] = useState('discover');
+  const [currentUserId, setCurrentUserId] = useState<string | null>(() => localStorage.getItem('frinderUserId'));
   const [users, setUsers] = useState<User[]>([]);
   const [chats, setChats] = useState<Chat[]>([]);
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
@@ -107,7 +108,7 @@ const App: React.FC = () => {
         const fetchedGroups = await api.groups.getAll();
         setGroups(fetchedGroups);
 
-        const fetchedChats = await api.chats.getByUserId('me');
+        const fetchedChats = await api.chats.getByUserId(currentUserId || 'me');
         setChats(fetchedChats);
       } catch (error) {
         console.error("Failed to fetch data, falling back to empty or mock if implemented", error);
@@ -122,7 +123,7 @@ const App: React.FC = () => {
     if (appState === 'main') {
       fetchData();
     }
-  }, [appState]);
+  }, [appState, currentUserId]);
 
   const t = (key: string) => {
     const lang = userProfile.language || 'English';
@@ -131,12 +132,49 @@ const App: React.FC = () => {
   };
 
   const handleCompleteOnboarding = async (data: any) => {
+    if (data.isLoginMode) {
+      try {
+        const loggedUser = await api.users.login({
+          email: data.email,
+          password: data.password,
+        });
+
+        const loggedUserId = loggedUser.id || loggedUser._id;
+        if (loggedUserId) {
+          setCurrentUserId(loggedUserId);
+          localStorage.setItem('frinderUserId', loggedUserId);
+        }
+
+        setUserProfile(prev => ({
+          ...prev,
+          name: loggedUser.name || prev.name,
+          avatar: loggedUser.avatar || prev.avatar,
+          discord: loggedUser.discord || prev.discord,
+          language: loggedUser.language || prev.language,
+          notifications: typeof loggedUser.notifications === 'boolean' ? loggedUser.notifications : prev.notifications,
+          preferences: {
+            ...prev.preferences,
+            ageRange: [loggedUser.preferences?.minAge || prev.preferences.ageRange[0], loggedUser.preferences?.maxAge || prev.preferences.ageRange[1]],
+            distanceMax: loggedUser.preferences?.distanceMax || prev.preferences.distanceMax,
+            favoriteGames: loggedUser.preferences?.favoriteGames || prev.preferences.favoriteGames,
+          },
+        }));
+
+        setAppState('main');
+      } catch (err) {
+        console.error('Failed to login existing user', err);
+        alert('No se pudo iniciar sesión. Revisa email y contraseña.');
+      }
+      return;
+    }
+
     // Map onboarding data to User model
+    const safeName = (data.name || data.email?.split('@')?.[0] || 'Player One').trim();
     const newUserHelper: Partial<User> = {
-      name: data.name,
-      age: 20, // Default as not in form
+      name: safeName,
+      age: data.age || 20,
       gender: 'Other' as any, // Default
-      distance: 0,
+      distance: data.distance || 25,
       bio: "Ready to play!",
       avatar: data.avatar,
       favoriteGames: data.games || [],
@@ -144,12 +182,28 @@ const App: React.FC = () => {
       isOnline: true,
       personality: data.skills ? data.skills.join(', ') : 'Gamer',
       languages: ['Spanish'],
-      discord: data.name.replace(/\s/g, '').toLowerCase() + '#0000',
+      discord: safeName.replace(/\s/g, '').toLowerCase() + '#0000',
+      email: data.email,
+      password: data.password,
+      language: 'Spanish',
+      notifications: true,
+      preferences: {
+        minAge: data.minAge || 18,
+        maxAge: data.maxAge || 99,
+        distanceMax: data.distance || 100,
+        favoriteGames: data.games || [],
+        skills: data.skills || []
+      }
     };
 
     try {
       const createdUser = await api.users.create(newUserHelper);
       console.log("User created:", createdUser);
+      const createdUserId = createdUser.id || createdUser._id;
+      if (createdUserId) {
+        setCurrentUserId(createdUserId);
+        localStorage.setItem('frinderUserId', createdUserId);
+      }
 
       setUserProfile(prev => ({
         ...prev,
@@ -193,7 +247,7 @@ const App: React.FC = () => {
 
       // Persist match/chat
       api.chats.sendMessage({
-        participants: ['me', user.id],
+        participants: [currentUserId || 'me', user.id],
         message: null
       }).catch(err => console.error("Failed to create chat in backend", err));
     }
@@ -205,16 +259,6 @@ const App: React.FC = () => {
       if (chat.id === chatId) return { ...chat, messages: [...chat.messages, message] };
       return chat;
     }));
-
-    // Persist message
-    const chat = chats.find(c => c.id === chatId);
-    if (chat) {
-      api.chats.sendMessage({
-        chatId: chat.id,
-        participants: chat.participants,
-        message: message
-      }).catch(err => console.error("Failed to send message to backend", err));
-    }
   };
 
   const handleAddGroup = async (group: Group) => {
@@ -228,10 +272,34 @@ const App: React.FC = () => {
     }
   };
 
+  const handleUpdateProfile = async (updates: any) => {
+    if (!currentUserId) {
+      setUserProfile(prev => ({ ...prev, ...updates }));
+      return;
+    }
+
+    const payload = {
+      name: updates.name,
+      discord: updates.discord,
+      language: updates.language,
+      notifications: updates.notifications,
+    };
+
+    const updatedUser = await api.users.update(currentUserId, payload);
+    setUserProfile(prev => ({
+      ...prev,
+      ...updates,
+      name: updatedUser.name || updates.name,
+      discord: updatedUser.discord || updates.discord,
+      language: updatedUser.language || updates.language,
+      notifications: typeof updatedUser.notifications === 'boolean' ? updatedUser.notifications : updates.notifications
+    }));
+  };
+
   if (appState === 'splash') {
     return (
       <div className="h-screen w-screen bg-secondary flex items-center justify-center animate-pulse">
-        <h1 className="text-8xl font-display font-bold text-accent italic text-glow tracking-tighter text-center">FRINDER</h1>
+        <h1 className="text-5xl sm:text-6xl md:text-7xl font-display font-bold text-accent italic text-glow tracking-tight text-center">FRINDER</h1>
       </div>
     );
   }
@@ -256,9 +324,9 @@ const App: React.FC = () => {
     switch (activeTab) {
       case 'discover': return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} />;
       case 'chat': return <ChatList users={users} chats={chats} onSelectChat={setActiveChatId} />;
-      case 'groups': return <Groups groups={groups} users={users} onAddGroup={handleAddGroup} t={t} />;
+      case 'groups': return <Groups groups={groups} users={users} currentUserId={currentUserId} onAddGroup={handleAddGroup} t={t} />;
       case 'rewards': return <Rewards />;
-      case 'settings': return <Settings userProfile={userProfile} onUpdateProfile={(u) => setUserProfile(p => ({ ...p, ...u }))} t={t} onShowPremium={() => setShowPremium(true)} />;
+      case 'settings': return <Settings userProfile={userProfile} onUpdateProfile={handleUpdateProfile} t={t} onShowPremium={() => setShowPremium(true)} />;
       default: return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} />;
     }
   };

@@ -35,15 +35,15 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences }) => {
   };
 
   if (!currentUser) return (
-    <div className="flex flex-col items-center justify-center py-40 opacity-20">
-      <span className="text-9xl mb-10">🎮</span>
-      <h2 className="text-4xl font-black uppercase tracking-widest text-center">No more players in range</h2>
+    <div className="flex flex-col items-center justify-center py-24 opacity-20">
+      <span className="text-6xl md:text-8xl mb-6">🎮</span>
+      <h2 className="text-2xl md:text-3xl font-black uppercase tracking-wider text-center">No more players in range</h2>
     </div>
   );
 
   return (
     <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-10 duration-700">
-      <div className="relative w-full max-w-xl aspect-[4/5] rounded-[60px] overflow-hidden card-depth group bg-secondary border border-accent/10 shadow-[0_50px_100px_rgba(0,0,0,0.8)]">
+      <div className="relative w-full max-w-md md:max-w-xl aspect-[4/5] rounded-[36px] md:rounded-[48px] overflow-hidden card-depth group bg-secondary border border-accent/10 shadow-[0_30px_70px_rgba(0,0,0,0.7)]">
         {/* Background Blur */}
         <div
           className="absolute inset-0 bg-cover bg-center blur-3xl opacity-40 scale-125 transition-transform duration-1000 group-hover:scale-110"
@@ -62,9 +62,9 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences }) => {
 
         {/* Basic Info */}
         {!showDetails && (
-          <div className="absolute bottom-0 left-0 right-0 p-12 pt-24">
-            <div className="flex items-center space-x-4 mb-6">
-              <h2 className="text-6xl font-black text-white tracking-tighter">
+          <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 pt-12 md:pt-20">
+            <div className="flex items-center space-x-3 mb-4 md:mb-6">
+              <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight">
                 {currentUser.name.split(' ')[0]}, {currentUser.age}
               </h2>
               {currentUser.isOnline && (
@@ -75,64 +75,64 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences }) => {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-3 mb-8">
+            <div className="flex flex-wrap gap-2.5 mb-5 md:mb-7">
               {currentUser.favoriteGames.slice(0, 3).map(game => (
-                <span key={game} className="px-5 py-2 glass text-accent text-xs font-black rounded-2xl uppercase tracking-[0.2em] border border-accent/20">
+                <span key={game} className="px-3 md:px-4 py-1.5 md:py-2 glass text-accent text-[10px] md:text-xs font-black rounded-xl md:rounded-2xl uppercase tracking-[0.14em] md:tracking-[0.2em] border border-accent/20">
                   {game}
                 </span>
               ))}
               <button
                 onClick={() => setShowDetails(true)}
-                className="px-5 py-2 glass text-white text-xs font-black rounded-2xl uppercase tracking-[0.2em] border border-white/20 hover:bg-white hover:text-secondary transition-all"
+                className="px-3 md:px-4 py-1.5 md:py-2 glass text-white text-[10px] md:text-xs font-black rounded-xl md:rounded-2xl uppercase tracking-[0.14em] md:tracking-[0.2em] border border-white/20 hover:bg-white hover:text-secondary transition-all"
               >
                 INFO+
               </button>
             </div>
 
-            <p className="text-white/80 line-clamp-2 mb-10 text-2xl font-medium italic leading-tight">
+            <p className="text-white/80 line-clamp-2 mb-6 md:mb-8 text-base md:text-xl font-medium italic leading-snug">
               "{currentUser.bio}"
             </p>
 
-            <div className="flex items-center justify-between px-4">
-              <button onClick={handleNext} className="w-20 h-20 rounded-full glass border-accent/20 flex items-center justify-center text-5xl hover:bg-primary/30 transition-all hover:scale-110 shadow-2xl active:scale-95">👎</button>
-              <button onClick={handleLike} className="w-28 h-28 rounded-full bg-primary flex items-center justify-center text-6xl shadow-[0_20px_60px_rgba(161,24,24,0.6)] hover:scale-110 transition-all active:scale-95 border-4 border-white/10">🔥</button>
-              <button className="w-20 h-20 rounded-full glass border-accent/20 flex items-center justify-center text-5xl hover:bg-yellow-500/30 transition-all hover:scale-110 shadow-2xl active:scale-95">⭐</button>
+            <div className="flex items-center justify-between px-1 md:px-3">
+              <button onClick={handleNext} className="w-14 h-14 md:w-18 md:h-18 rounded-full glass border-accent/20 flex items-center justify-center text-3xl md:text-4xl hover:bg-primary/30 transition-all hover:scale-110 shadow-2xl active:scale-95">👎</button>
+              <button onClick={handleLike} className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary flex items-center justify-center text-4xl md:text-5xl shadow-[0_20px_60px_rgba(161,24,24,0.6)] hover:scale-110 transition-all active:scale-95 border-4 border-white/10">🔥</button>
+              <button className="w-14 h-14 md:w-18 md:h-18 rounded-full glass border-accent/20 flex items-center justify-center text-3xl md:text-4xl hover:bg-yellow-500/30 transition-all hover:scale-110 shadow-2xl active:scale-95">⭐</button>
             </div>
           </div>
         )}
 
         {/* Extended Info */}
         {showDetails && (
-          <div className="absolute inset-0 z-20 p-12 flex flex-col justify-center animate-in fade-in zoom-in duration-300">
-            <button onClick={() => setShowDetails(false)} className="absolute top-12 right-12 w-14 h-14 glass rounded-full flex items-center justify-center text-3xl font-bold">✕</button>
-            <div className="space-y-10">
+          <div className="absolute inset-0 z-20 p-6 md:p-10 flex flex-col justify-center animate-in fade-in zoom-in duration-300">
+            <button onClick={() => setShowDetails(false)} className="absolute top-6 md:top-10 right-6 md:right-10 w-11 h-11 md:w-12 md:h-12 glass rounded-full flex items-center justify-center text-xl md:text-2xl font-bold">✕</button>
+            <div className="space-y-6 md:space-y-8">
               <div className="text-center">
-                <h3 className="text-5xl font-black text-accent mb-3 uppercase tracking-tighter">{currentUser.name}</h3>
+                <h3 className="text-3xl md:text-4xl font-black text-accent mb-2 uppercase tracking-tight">{currentUser.name}</h3>
                 <p className="text-primary font-black uppercase tracking-[0.4em] text-xs">Vibe: {currentUser.personality}</p>
               </div>
               <div className="space-y-4">
                 <h4 className="text-xs font-black uppercase tracking-[0.5em] text-accent/30">Player Bio</h4>
-                <p className="text-2xl leading-snug italic font-medium">"{currentUser.bio}"</p>
+                <p className="text-base md:text-lg leading-snug italic font-medium">"{currentUser.bio}"</p>
               </div>
-              <div className="grid grid-cols-2 gap-6">
-                <div className="glass p-6 rounded-[35px] border border-white/5">
+              <div className="grid grid-cols-2 gap-3 md:gap-5">
+                <div className="glass p-4 md:p-5 rounded-2xl md:rounded-3xl border border-white/5">
                   <p className="text-[10px] font-black text-accent/30 uppercase tracking-widest mb-3">Languages</p>
                   <div className="flex flex-wrap gap-2">
                     {currentUser.languages.map(l => <span key={l} className="text-sm font-bold text-white">{l}</span>)}
                   </div>
                 </div>
-                <div className="glass p-6 rounded-[35px] border border-white/5">
+                <div className="glass p-4 md:p-5 rounded-2xl md:rounded-3xl border border-white/5">
                   <p className="text-[10px] font-black text-accent/30 uppercase tracking-widest mb-3">Discord</p>
                   <p className="text-sm font-bold text-white truncate">{currentUser.discord || 'Hidden'}</p>
                 </div>
               </div>
-              <button onClick={handleLike} className="w-full py-6 bg-primary rounded-[40px] font-black text-2xl uppercase tracking-[0.3em] shadow-2xl shadow-primary/40 active:scale-95 transition-all border-2 border-white/10">MATCH NOW</button>
+              <button onClick={handleLike} className="w-full py-4 md:py-5 bg-primary rounded-2xl md:rounded-3xl font-black text-base md:text-xl uppercase tracking-[0.18em] md:tracking-[0.26em] shadow-2xl shadow-primary/40 active:scale-95 transition-all border-2 border-white/10">MATCH NOW</button>
             </div>
           </div>
         )}
 
         {/* Distance Badge */}
-        <div className="absolute top-10 right-10 glass px-6 py-3 rounded-full font-black text-xs uppercase tracking-[0.4em] border border-white/10 shadow-2xl">
+        <div className="absolute top-5 md:top-8 right-5 md:right-8 glass px-3 md:px-5 py-1.5 md:py-2 rounded-full font-black text-[10px] md:text-xs uppercase tracking-[0.2em] md:tracking-[0.3em] border border-white/10 shadow-2xl">
           📍 {currentUser.distance} KM
         </div>
       </div>

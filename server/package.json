@@ -4,9 +4,9 @@
     "description": "Backend for Frinder application",
     "main": "index.ts",
     "scripts": {
-        "start": "ts-node index.ts",
-        "dev": "nodemon index.ts",
-        "seed": "ts-node seed.ts"
+        "start": "ts-node --project tsconfig.json index.ts",
+        "dev": "nodemon --watch . --ext ts --exec \"ts-node --project tsconfig.json\" index.ts",
+        "seed": "ts-node --project tsconfig.json seed.ts"
     },
     "keywords": [],
     "author": "",

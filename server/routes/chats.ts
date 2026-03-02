@@ -47,8 +47,7 @@ router.post('/message', async (req: Request, res: Response) => {
         if (!chat) {
             chat = new Chat({
                 participants,
-                messages: [],
-                lastMessage: message.text
+                messages: []
             });
         }
 

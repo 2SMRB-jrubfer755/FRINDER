@@ -3,6 +3,30 @@ import User from '../models/User';
 
 const router = express.Router();
 
+// LOGIN user
+router.post('/login', async (req, res) => {
+    try {
+        const { email, password } = req.body || {};
+
+        if (!email || !password) {
+            return res.status(400).json({ message: 'Email and password are required' });
+        }
+
+        const user = await User.findOne({ email });
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (user.password !== password) {
+            return res.status(401).json({ message: 'Invalid credentials' });
+        }
+
+        res.json(user);
+    } catch (error) {
+        res.status(500).json({ message: 'Error logging in user', error });
+    }
+});
+
 // GET all users
 router.get('/', async (req, res) => {
     try {

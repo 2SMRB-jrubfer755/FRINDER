@@ -1,7 +1,6 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { User, Message, Chat } from '../types';
-import { getGamerResponse } from '../services/geminiService';
 import { api } from '../services/api';
 
 interface ChatDetailProps {
@@ -13,14 +12,13 @@ interface ChatDetailProps {
 
 const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBack }) => {
   const [inputText, setInputText] = useState('');
-  const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
-  }, [chat.messages, isTyping]);
+  }, [chat.messages]);
 
   const handleSend = async () => {
     if (!inputText.trim()) return;
@@ -46,34 +44,6 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBa
       onSendMessage(chat.id, userMessage);
 
       setInputText('');
-      setIsTyping(true);
-
-      // AI Gamer Response (Mocked for now as we don't have a backend for AI yet, or we could call backend)
-      // For this migration, we keep the client-side AI mock response but send it to DB too.
-      const history = chat.messages.map(m => ({
-        role: m.senderId === 'me' ? 'user' : 'model',
-        parts: [{ text: m.text }]
-      }));
-
-      const aiText = await getGamerResponse(user.name, user.bio, history, inputText);
-
-      setIsTyping(false);
-
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        senderId: user.id,
-        text: aiText,
-        timestamp: Date.now(),
-        isAi: true
-      };
-
-      await api.chats.sendMessage({
-        chatId: chat.id,
-        participants: chat.participants,
-        message: aiMessage
-      });
-
-      onSendMessage(chat.id, aiMessage);
     } catch (e) {
       console.error("Failed to send message", e);
     }
@@ -122,15 +92,6 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBa
             </div>
           </div>
         ))}
-        {isTyping && (
-          <div className="flex justify-start">
-            <div className="glass px-4 py-3 rounded-2xl rounded-bl-none flex space-x-1">
-              <div className="w-2 h-2 bg-accent/40 rounded-full animate-bounce" />
-              <div className="w-2 h-2 bg-accent/40 rounded-full animate-bounce delay-100" />
-              <div className="w-2 h-2 bg-accent/40 rounded-full animate-bounce delay-200" />
-            </div>
-          </div>
-        )}
       </div>
 
       {/* Input */}

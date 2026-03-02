@@ -29,6 +29,17 @@ export interface User {
   languages: string[];
   discord?: string;
   skills?: string[];
+  email?: string;
+  password?: string;
+  language?: string;
+  notifications?: boolean;
+  preferences?: {
+    minAge?: number;
+    maxAge?: number;
+    distanceMax?: number;
+    favoriteGames?: string[];
+    skills?: string[];
+  };
 }
 
 export interface UserPreferences {

@@ -1,4 +1,4 @@
-const API_URL = 'http://localhost:5000/api';
+const API_URL = (import.meta as any).env?.VITE_API_URL || '/api';
 
 export const api = {
     users: {
@@ -19,6 +19,24 @@ export const api = {
                 body: JSON.stringify(userData),
             });
             if (!response.ok) throw new Error('Failed to create user');
+            return response.json();
+        },
+        login: async (credentials: { email: string; password: string }) => {
+            const response = await fetch(`${API_URL}/users/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(credentials),
+            });
+            if (!response.ok) throw new Error('Failed to login user');
+            return response.json();
+        },
+        update: async (id: string, userData: any) => {
+            const response = await fetch(`${API_URL}/users/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(userData),
+            });
+            if (!response.ok) throw new Error('Failed to update user');
             return response.json();
         }
     },

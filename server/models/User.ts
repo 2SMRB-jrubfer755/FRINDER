@@ -29,6 +29,17 @@ export interface IUser extends Document {
   languages: string[];
   discord?: string;
   skills?: string[];
+  email?: string;
+  password?: string;
+  language?: string;
+  notifications?: boolean;
+  preferences?: {
+    minAge?: number;
+    maxAge?: number;
+    distanceMax?: number;
+    favoriteGames?: string[];
+    skills?: string[];
+  };
 }
 
 const UserSchema: Schema = new Schema({
@@ -44,7 +55,18 @@ const UserSchema: Schema = new Schema({
   personality: { type: String, required: true },
   languages: [{ type: String }],
   discord: { type: String },
-  skills: [{ type: String }]
+  skills: [{ type: String }],
+  email: { type: String },
+  password: { type: String },
+  language: { type: String },
+  notifications: { type: Boolean, default: true },
+  preferences: {
+    minAge: { type: Number },
+    maxAge: { type: Number },
+    distanceMax: { type: Number },
+    favoriteGames: [{ type: String }],
+    skills: [{ type: String }]
+  }
 }, {
   timestamps: true,
   toJSON: { virtuals: true },

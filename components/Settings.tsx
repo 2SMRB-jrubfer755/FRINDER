@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 
 interface SettingsProps {
   userProfile: any;
-  onUpdateProfile: (updates: any) => void;
+  onUpdateProfile: (updates: any) => Promise<void>;
   t: (key: string) => string;
   onShowPremium: () => void;
   onBack?: () => void;
@@ -16,18 +16,22 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
   const [localNotifs, setLocalNotifs] = useState(userProfile.notifications);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsSaving(true);
-    setTimeout(() => {
-      onUpdateProfile({
+    try {
+      await onUpdateProfile({
         name: localName,
         discord: localDiscord,
         language: localLang,
         notifications: localNotifs
       });
-      setIsSaving(false);
       alert(t('settingsSaved') || 'Settings saved successfully!');
-    }, 1000);
+    } catch (error) {
+      console.error('Failed to save settings', error);
+      alert('No se pudieron guardar los ajustes. Inténtalo de nuevo.');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const avatars = [
@@ -39,33 +43,33 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
   ];
 
   return (
-    <div className="space-y-12 pb-20 animate-in fade-in slide-in-from-bottom-6 duration-500">
-      <header className="flex items-center justify-between">
+    <div className="space-y-8 md:space-y-10 pb-16 animate-in fade-in slide-in-from-bottom-6 duration-500">
+      <header className="flex items-start md:items-center justify-between gap-3">
         <div className="flex items-center gap-4">
           {onBack && (
             <button onClick={onBack} className="w-14 h-14 glass rounded-full flex items-center justify-center text-2xl md:hidden">←</button>
           )}
           <div>
-            <h2 className="text-7xl font-display font-bold text-accent mb-3 tracking-tighter italic text-glow uppercase">{t('config')}</h2>
-            <p className="text-accent/60 text-xl uppercase font-bold tracking-widest">{t('configSub')}</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-display font-bold text-accent mb-2 tracking-tight italic text-glow uppercase">{t('config')}</h2>
+            <p className="text-accent/60 text-xs sm:text-sm md:text-base uppercase font-bold tracking-[0.14em] md:tracking-[0.2em]">{t('configSub')}</p>
           </div>
         </div>
         {!userProfile.isPremium && (
-          <button onClick={onShowPremium} className="hidden md:block px-8 py-3 bg-accent text-secondary font-black rounded-full animate-bounce shadow-xl uppercase tracking-tighter text-sm">GO GOLD</button>
+          <button onClick={onShowPremium} className="hidden md:block px-6 py-2.5 bg-accent text-secondary font-black rounded-full animate-bounce shadow-xl uppercase tracking-tight text-xs">GO GOLD</button>
         )}
       </header>
 
       {/* Account Section */}
-      <section className="space-y-8">
-        <h3 className="text-sm font-black uppercase tracking-[0.4em] text-primary">{t('profileDetails')}</h3>
-        <div className="glass p-10 rounded-[50px] border border-accent/10 space-y-10 shadow-2xl">
-           <div className="flex flex-col md:flex-row items-center space-y-6 md:space-y-0 md:space-x-8">
+      <section className="space-y-5 md:space-y-6">
+        <h3 className="text-xs font-black uppercase tracking-[0.24em] md:tracking-[0.32em] text-primary">{t('profileDetails')}</h3>
+        <div className="glass p-5 sm:p-7 md:p-8 rounded-3xl md:rounded-[40px] border border-accent/10 space-y-6 md:space-y-8 shadow-2xl">
+           <div className="flex flex-col md:flex-row items-center space-y-4 md:space-y-0 md:space-x-6">
               <div className="relative group">
-                <img src={userProfile.avatar} className="w-32 h-32 rounded-[40px] object-cover border-4 border-primary shadow-2xl transition-transform group-hover:scale-105" />
-                <div className="absolute -bottom-3 -right-3 w-14 h-14 bg-accent text-secondary rounded-2xl flex items-center justify-center text-3xl shadow-2xl">⚡</div>
+                <img src={userProfile.avatar} className="w-24 h-24 md:w-28 md:h-28 rounded-3xl object-cover border-4 border-primary shadow-2xl transition-transform group-hover:scale-105" />
+                <div className="absolute -bottom-2 -right-2 w-10 h-10 md:w-12 md:h-12 bg-accent text-secondary rounded-xl flex items-center justify-center text-xl md:text-2xl shadow-2xl">⚡</div>
               </div>
               <div className="text-center md:text-left">
-                <h4 className="text-4xl font-black text-white uppercase tracking-tighter">{userProfile.name}</h4>
+                <h4 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">{userProfile.name}</h4>
                 <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                    <span className="bg-primary/20 text-primary px-3 py-1 rounded-lg text-[10px] font-black tracking-widest">LV. 42</span>
                    <span className="bg-accent/20 text-accent px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase">Elite Gamer</span>
@@ -73,21 +77,21 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
               </div>
            </div>
            
-           <div className="grid grid-cols-1 md:grid-cols-2 gap-10 pt-4">
-              <div className="space-y-4">
+           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 pt-2">
+              <div className="space-y-2.5">
                 <label className="text-[10px] font-black uppercase text-accent/50 tracking-widest block">{t('displayName')}</label>
                 <input 
                   value={localName} 
                   onChange={(e) => setLocalName(e.target.value)}
-                  className="w-full glass bg-white/5 border-b-4 border-accent/10 py-4 px-2 text-2xl font-bold focus:border-primary outline-none transition-all rounded-t-2xl" 
+                  className="w-full glass bg-white/5 border-b-2 border-accent/10 py-3 px-2 text-lg md:text-xl font-bold focus:border-primary outline-none transition-all rounded-t-xl" 
                 />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-2.5">
                 <label className="text-[10px] font-black uppercase text-accent/50 tracking-widest block">{t('discordTag')}</label>
                 <input 
                   value={localDiscord}
                   onChange={(e) => setLocalDiscord(e.target.value)}
-                  className="w-full glass bg-white/5 border-b-4 border-accent/10 py-4 px-2 text-2xl font-bold focus:border-primary outline-none transition-all rounded-t-2xl" 
+                  className="w-full glass bg-white/5 border-b-2 border-accent/10 py-3 px-2 text-lg md:text-xl font-bold focus:border-primary outline-none transition-all rounded-t-xl" 
                 />
               </div>
            </div>
@@ -95,18 +99,18 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
       </section>
 
       {/* Preferences */}
-      <section className="space-y-8">
-        <h3 className="text-sm font-black uppercase tracking-[0.4em] text-primary">{t('appPrefs')}</h3>
-        <div className="space-y-6">
-           <div className="glass p-10 rounded-[40px] flex items-center justify-between border border-accent/5 hover:border-accent/20 transition-all shadow-xl">
+      <section className="space-y-5 md:space-y-6">
+        <h3 className="text-xs font-black uppercase tracking-[0.24em] md:tracking-[0.32em] text-primary">{t('appPrefs')}</h3>
+        <div className="space-y-4 md:space-y-5">
+           <div className="glass p-5 md:p-7 rounded-2xl md:rounded-3xl flex items-center justify-between border border-accent/5 hover:border-accent/20 transition-all shadow-xl gap-4">
               <div>
-                <h5 className="font-black text-3xl uppercase tracking-tighter">{t('appLanguage')}</h5>
-                <p className="text-base text-accent/50 font-medium">{t('langSub')}</p>
+                <h5 className="font-black text-lg md:text-2xl uppercase tracking-tight">{t('appLanguage')}</h5>
+                <p className="text-xs md:text-sm text-accent/50 font-medium">{t('langSub')}</p>
               </div>
               <select 
                 value={localLang} 
                 onChange={(e) => setLocalLang(e.target.value)}
-                className="bg-secondary text-accent font-black px-8 py-4 rounded-[25px] border-4 border-accent/20 outline-none cursor-pointer hover:border-primary transition-all text-xl shadow-lg"
+                className="bg-secondary text-accent font-black px-4 md:px-6 py-2.5 md:py-3 rounded-xl md:rounded-2xl border-2 border-accent/20 outline-none cursor-pointer hover:border-primary transition-all text-sm md:text-base shadow-lg"
               >
                 <option value="English">ENGLISH</option>
                 <option value="Spanish">ESPAÑOL</option>
@@ -115,10 +119,10 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
               </select>
            </div>
 
-           <div className="glass p-10 rounded-[40px] flex items-center justify-between border border-accent/5 hover:border-accent/20 transition-all shadow-xl">
+           <div className="glass p-5 md:p-7 rounded-2xl md:rounded-3xl flex items-center justify-between border border-accent/5 hover:border-accent/20 transition-all shadow-xl gap-4">
               <div>
-                <h5 className="font-black text-3xl uppercase tracking-tighter">{t('pushNotifs')}</h5>
-                <p className="text-base text-accent/50 font-medium">{t('notifSub')}</p>
+                <h5 className="font-black text-lg md:text-2xl uppercase tracking-tight">{t('pushNotifs')}</h5>
+                <p className="text-xs md:text-sm text-accent/50 font-medium">{t('notifSub')}</p>
               </div>
               <button 
                 onClick={() => setLocalNotifs(!localNotifs)}
@@ -130,15 +134,15 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
         </div>
       </section>
 
-      <section className="pt-16 flex flex-col space-y-8 max-w-2xl mx-auto">
+      <section className="pt-6 md:pt-10 flex flex-col space-y-4 md:space-y-6 max-w-2xl mx-auto">
         <button 
           onClick={handleSave}
           disabled={isSaving}
-          className={`w-full py-8 bg-accent text-secondary font-black rounded-[45px] uppercase tracking-[0.4em] text-2xl shadow-2xl hover:bg-white active:scale-95 transition-all flex items-center justify-center border-4 border-transparent hover:border-accent ${isSaving ? 'opacity-50' : ''}`}
+          className={`w-full py-4 md:py-5 bg-accent text-secondary font-black rounded-2xl md:rounded-[32px] uppercase tracking-[0.18em] md:tracking-[0.3em] text-sm md:text-lg shadow-2xl hover:bg-white active:scale-95 transition-all flex items-center justify-center border-4 border-transparent hover:border-accent ${isSaving ? 'opacity-50' : ''}`}
         >
           {isSaving ? <div className="w-8 h-8 border-4 border-secondary border-t-transparent rounded-full animate-spin" /> : t('saveChanges')}
         </button>
-        <button onClick={() => window.location.reload()} className="w-full py-8 glass border-4 border-primary/20 text-primary font-black rounded-[45px] uppercase tracking-[0.4em] text-2xl hover:bg-primary/10 transition-all active:scale-95">
+        <button onClick={() => window.location.reload()} className="w-full py-4 md:py-5 glass border-4 border-primary/20 text-primary font-black rounded-2xl md:rounded-[32px] uppercase tracking-[0.18em] md:tracking-[0.3em] text-sm md:text-lg hover:bg-primary/10 transition-all active:scale-95">
           {t('logout')}
         </button>
       </section>
