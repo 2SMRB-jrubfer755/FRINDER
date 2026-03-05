@@ -10,9 +10,10 @@ interface SettingsProps {
   onThemeChange?: (theme: 'light' | 'dark') => void;
   onLogout?: () => Promise<void>;
   onBack?: () => void;
+  onNotification?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, onShowPremium, theme, onThemeChange, onLogout, onBack }) => {
+const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, onShowPremium, theme, onThemeChange, onLogout, onBack, onNotification }) => {
   const [localName, setLocalName] = useState(userProfile.name);
   const [localDiscord, setLocalDiscord] = useState(userProfile.discord);
   const [localLang, setLocalLang] = useState(userProfile.language);
@@ -22,14 +23,14 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
   const [saveError, setSaveError] = useState<string>('');
 
   const gamingAvatars = [
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer1',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer2',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer3',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer4',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer5',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer6',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer7',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer8',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer1',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer2',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer3',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer4',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer5',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer6',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer7',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer8',
   ];
 
   const handleSave = async () => {
@@ -54,10 +55,10 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
         avatar: localAvatar,
         theme: theme
       });
-      alert(t('settingsSaved') || 'Settings saved successfully!');
+      onNotification?.(t('settingsSaved') || 'Settings saved successfully!', 'success');
     } catch (error) {
       console.error('Failed to save settings', error);
-      alert('No se pudieron guardar los ajustes. Inténtalo de nuevo.');
+      onNotification?.('No se pudieron guardar los ajustes. Inténtalo de nuevo.', 'error');
     } finally {
       setIsSaving(false);
     }
@@ -68,13 +69,13 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
     if (file) {
       // Validate file size (max 200KB para que el base64 no sea demasiado grande)
       if (file.size > 200 * 1024) {
-        alert('La imagen es muy grande. Máximo 200KB. Usa una imagen más pequeña o comprimida.');
+        onNotification?.('La imagen es muy grande. Máximo 200KB. Usa una imagen más pequeña o comprimida.', 'error');
         return;
       }
       
       // Validate file type
       if (!file.type.startsWith('image/')) {
-        alert('El archivo debe ser una imagen válida (JPG, PNG, GIF, WebP).');
+        onNotification?.('El archivo debe ser una imagen válida (JPG, PNG, GIF, WebP).', 'error');
         return;
       }
       
@@ -84,12 +85,12 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
           const result = event.target?.result as string;
           // Validate that base64 isn't too large when encoded
           if (result.length > 1 * 1024 * 1024) {
-            alert('La imagen convertida es demasiado grande. Usa una imagen más pequeña.');
+            onNotification?.('La imagen convertida es demasiado grande. Usa una imagen más pequeña.', 'error');
             return;
           }
           setLocalAvatar(result);
         } catch (err) {
-          alert('Error al procesar la imagen');
+          onNotification?.('Error al procesar la imagen', 'error');
         }
       };
       reader.onerror = () => {
@@ -126,7 +127,7 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
                 <div className="absolute -bottom-2 -right-2 w-10 h-10 md:w-12 md:h-12 bg-accent text-secondary rounded-xl flex items-center justify-center text-xl md:text-2xl shadow-2xl">⚡</div>
               </div>
               <div className="text-center md:text-left">
-                <h4 className="text-2xl md:text-3xl font-black text-white uppercase tracking-tight">{userProfile.name}</h4>
+                <h4 className="text-2xl md:text-3xl font-black text-accent-dark dark:text-accent-dark text-accent-light uppercase tracking-tight">{userProfile.name}</h4>
                 <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
                    <span className="bg-primary/20 text-primary px-3 py-1 rounded-lg text-[10px] font-black tracking-widest">LV. 42</span>
                    <span className="bg-accent/20 text-accent px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase">Elite Gamer</span>
@@ -136,7 +137,7 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
            
            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 pt-2">
               <div className="space-y-2.5">
-                <label className="text-[10px] font-black uppercase text-accent/50 tracking-widest block">{t('displayName')}</label>
+                <label className="text-[10px] font-black uppercase text-accent-50 tracking-widest block">{t('displayName')}</label>
                 <input 
                   value={localName} 
                   onChange={(e) => setLocalName(e.target.value)}
@@ -144,7 +145,7 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
                 />
               </div>
               <div className="space-y-2.5">
-                <label className="text-[10px] font-black uppercase text-accent/50 tracking-widest block">{t('discordTag')}</label>
+                <label className="text-[10px] font-black uppercase text-accent-50 tracking-widest block">{t('discordTag')}</label>
                 <input 
                   value={localDiscord}
                   onChange={(e) => setLocalDiscord(e.target.value)}
@@ -196,7 +197,7 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
            <div className="glass p-5 md:p-7 rounded-2xl md:rounded-3xl flex items-center justify-between border border-accent/5 hover:border-accent/20 transition-all shadow-xl gap-4">
               <div>
                 <h5 className="font-black text-lg md:text-2xl uppercase tracking-tight">{t('theme')}</h5>
-                <p className="text-xs md:text-sm text-accent/50 font-medium">{theme === 'dark' ? t('darkMode') : t('lightMode')}</p>
+                <p className="text-xs md:text-sm text-accent-50 font-medium">{theme === 'dark' ? t('darkMode') : t('lightMode')}</p>
               </div>
               <button 
                 onClick={async () => {
@@ -217,7 +218,7 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
                     alert('No se pudo guardar el cambio de tema');
                   }
                 }}
-                className={`w-20 h-10 rounded-full p-1.5 transition-all duration-500 ${theme === 'dark' ? 'bg-primary shadow-[0_0_30px_rgba(161,24,24,0.5)]' : 'bg-white/30'}`}
+                className={`w-20 h-10 rounded-full p-1.5 transition-all duration-500 ${theme === 'dark' ? 'bg-primary shadow-[0_0_30px_rgba(161,24,24,0.5)]' : 'bg-gray-300'}`}
               >
                 <div className={`w-7 h-7 rounded-full shadow-2xl transform transition-transform duration-500 flex items-center justify-center ${theme === 'dark' ? 'translate-x-10 bg-primary' : 'translate-x-0 bg-white'}`}>
                   <span className="text-xs">{theme === 'dark' ? '🌙' : '☀️'}</span>

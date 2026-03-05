@@ -85,7 +85,7 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
 const App: React.FC = () => {
   const defaultProfile = {
     name: 'Player One',
-    avatar: 'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer1',
+    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer1',
     discord: 'gamer#0001',
     language: 'Spanish',
     notifications: true,
@@ -107,6 +107,16 @@ const App: React.FC = () => {
   const [activeChatId, setActiveChatId] = useState<string | null>(null);
   const [groups, setGroups] = useState<Group[]>([]);
   const [showPremium, setShowPremium] = useState(false);
+  const [notifications, setNotifications] = useState<Array<{id: string, message: string, type: 'success' | 'error' | 'info'}>>([]);
+
+  const addNotification = (message: string, type: 'success' | 'error' | 'info' = 'info') => {
+    const id = Date.now().toString();
+    setNotifications(prev => [...prev, { id, message, type }]);
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 5000);
+  };
 
   const [userProfile, setUserProfile] = useState(defaultProfile);
 
@@ -200,27 +210,27 @@ const App: React.FC = () => {
   };
 
   const handleRequestEntrance = async (groupId: string) => {
-    if (!currentUserId) return alert('Please login to request entrance');
+    if (!currentUserId) return addNotification('Please login to request entrance', 'error');
     try {
       const updatedGroup = await api.groups.join(groupId);
       setGroups(prev => prev.map(g => g._id === updatedGroup._id ? updatedGroup : g));
-      alert('Entrance request processed');
+      addNotification('Entrance request processed', 'success');
     } catch (err) {
       console.error('Failed to request entrance', err);
-      alert('No se pudo solicitar entrada. Inténtalo de nuevo.');
+      addNotification('No se pudo solicitar entrada. Inténtalo de nuevo.', 'error');
     }
   };
 
   const handlePurchasePremium = async () => {
-    if (!currentUserId) return alert('Please login to purchase premium');
+    if (!currentUserId) return addNotification('Please login to purchase premium', 'error');
     try {
       const updatedUser = await api.users.purchasePremium(currentUserId);
       setUserProfile(prev => ({ ...prev, isPremium: true }));
-      alert('Gracias por comprar Frinder Gold');
+      addNotification('Gracias por comprar Frinder Gold', 'success');
       setShowPremium(false);
     } catch (err) {
       console.error('Failed to purchase premium', err);
-      alert('No se pudo completar la compra. Inténtalo de nuevo.');
+      addNotification('No se pudo completar la compra. Inténtalo de nuevo.', 'error');
     }
   };
 
@@ -259,7 +269,7 @@ const App: React.FC = () => {
         setAppState('main');
       } catch (err: any) {
         console.error('Failed to login existing user', err);
-        alert(err?.message || 'No se pudo iniciar sesión. Revisa email y contraseña.');
+        addNotification(err?.message || 'No se pudo iniciar sesión. Revisa email y contraseña.', 'error');
       }
       return;
     }
@@ -318,7 +328,7 @@ const App: React.FC = () => {
       setAppState('main');
     } catch (err: any) {
       console.error("Failed to create user in backend", err);
-      alert(err?.message || 'Hubo un error al crear el usuario.');
+      addNotification(err?.message || 'Hubo un error al crear el usuario.', 'error');
       // do not proceed without DB
     }
   };
@@ -337,7 +347,7 @@ const App: React.FC = () => {
       setActiveTab('chat');
     } catch (err: any) {
       console.error('Failed to create chat in backend', err);
-      alert('No se pudo iniciar chat.');
+      addNotification('No se pudo iniciar chat.', 'error');
     }
   };
 
@@ -359,7 +369,7 @@ const App: React.FC = () => {
       setGroups(prev => [newGroup, ...prev]);
     } catch (err: any) {
       console.error("Failed to create group", err);
-      alert(err?.message || 'No se pudo crear el grupo.');
+      addNotification(err?.message || 'No se pudo crear el grupo.', 'error');
       // do not add locally, require DB
     }
   };
@@ -431,16 +441,16 @@ const App: React.FC = () => {
       const participantId = chat?.participants?.find(p => p !== (currentUserId || 'me')) || chat?.participants?.[0];
       const user = users.find(u => u.id === participantId || u._id === participantId);
       if (chat && user) {
-        return <ChatDetail chat={chat} user={user} currentUserId={currentUserId} onSendMessage={handleSendMessage} onBack={() => setActiveChatId(null)} />;
+        return <ChatDetail chat={chat} user={user} currentUserId={currentUserId} onSendMessage={handleSendMessage} onBack={() => setActiveChatId(null)} onNotification={addNotification} />;
       }
     }
 
     switch (activeTab) {
-      case 'discover': return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} currentUserId={currentUserId} />;
-      case 'chat': return <ChatList users={users} chats={chats} currentUserId={currentUserId} onSelectChat={setActiveChatId} />;
-      case 'groups': return <Groups groups={groups} users={users} currentUserId={currentUserId} onAddGroup={handleAddGroup} onRequestEntrance={handleRequestEntrance} t={t} />;
-      case 'rewards': return <Rewards currentUserId={currentUserId} />;
-      case 'settings': return <Settings userProfile={userProfile} onUpdateProfile={handleUpdateProfile} t={t} onShowPremium={() => setShowPremium(true)} theme={userProfile.theme} onThemeChange={(newTheme) => setUserProfile(prev => ({ ...prev, theme: newTheme }))} onLogout={handleLogout} onBack={() => setActiveTab('discover')} />;
+      case 'discover': return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} currentUserId={currentUserId} onNotification={addNotification} />;
+      case 'chat': return <ChatList users={users} chats={chats} currentUserId={currentUserId} onSelectChat={setActiveChatId} onNotification={addNotification} />;
+      case 'groups': return <Groups groups={groups} users={users} currentUserId={currentUserId} onAddGroup={handleAddGroup} onRequestEntrance={handleRequestEntrance} t={t} onNotification={addNotification} />;
+      case 'rewards': return <Rewards currentUserId={currentUserId} onNotification={addNotification} />;
+      case 'settings': return <Settings userProfile={userProfile} onUpdateProfile={handleUpdateProfile} t={t} onShowPremium={() => setShowPremium(true)} theme={userProfile.theme} onThemeChange={(newTheme) => setUserProfile(prev => ({ ...prev, theme: newTheme }))} onLogout={handleLogout} onBack={() => setActiveTab('discover')} onNotification={addNotification} />;
       default: return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} currentUserId={currentUserId} />;
     }
   };
@@ -451,6 +461,21 @@ const App: React.FC = () => {
         {renderScreen()}
       </Layout>
       {showPremium && <PremiumOverlay onClose={() => setShowPremium(false)} t={t} currentUserId={currentUserId} onPurchase={handlePurchasePremium} />}
+      
+      {/* Notifications */}
+      <div className="fixed top-4 right-4 z-50 space-y-2">
+        {notifications.map(notification => (
+          <div
+            key={notification.id}
+            className={`px-4 py-2 rounded-lg shadow-lg text-white font-medium animate-in slide-in-from-right duration-300 ${
+              notification.type === 'success' ? 'bg-green-500' :
+              notification.type === 'error' ? 'bg-red-500' : 'bg-blue-500'
+            }`}
+          >
+            {notification.message}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

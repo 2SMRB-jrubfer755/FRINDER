@@ -18,7 +18,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, t, onBack }) => {
     minAge: 18,
     maxAge: 35,
     distance: 25,
-    avatar: 'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer1',
+    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer1',
     games: [] as string[],
     skills: [] as string[]
   });
@@ -55,15 +55,15 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, t, onBack }) => {
   const skillsList = ['Support 🛡️', 'Sniper 🎯', 'Leader 👑', 'Funny 😂', 'Strategic 🧠', 'Tryhard 🔥', 'Chilled 🌊', 'Carry ⚔️', 'Noob 🦆'];
   
   const avatars = [
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer1',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer2',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer3',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer4',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer5',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer6',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer7',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer8',
-    'https://api.dicebear.com/7.x/avataaars-neutral/svg?seed=gamer9',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer1',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer2',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer3',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer4',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer5',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer6',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer7',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer8',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer9',
   ];
 
   const toggleSelection = (item: string, field: 'games' | 'skills') => {

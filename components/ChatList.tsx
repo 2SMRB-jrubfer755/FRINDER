@@ -8,9 +8,11 @@ interface ChatListProps {
   chats: Chat[];
   currentUserId?: string | null;
   onSelectChat: (chatId: string) => void;
+  onNotification?: (message: string, type?: 'success' | 'error' | 'info') => void;
+}
 }
 
-const ChatList: React.FC<ChatListProps> = ({ users, chats, onSelectChat }) => {
+const ChatList: React.FC<ChatListProps> = ({ users, chats, onSelectChat, onNotification }) => {
   const [profileUser, setProfileUser] = useState<null | User>(null);
   return (
     <div className="space-y-6">
@@ -55,7 +57,7 @@ const ChatList: React.FC<ChatListProps> = ({ users, chats, onSelectChat }) => {
                   const participants = [profileUser.id];
                   if (currentUserId) participants.unshift(currentUserId);
                   else {
-                    alert('Por favor, inicia sesión primero');
+                    onNotification?.('Por favor, inicia sesión primero', 'error');
                     return;
                   }
                   const savedChat = await api.chats.sendMessage({ participants, message: null });
@@ -64,7 +66,7 @@ const ChatList: React.FC<ChatListProps> = ({ users, chats, onSelectChat }) => {
                   onSelectChat(newChatId);
                 } catch (err) {
                   console.error('Failed to open chat', err);
-                  alert('No se pudo abrir el chat');
+                  onNotification?.('No se pudo abrir el chat', 'error');
                 }
               }} className="flex-1 py-2 bg-primary text-white rounded-md">Message</button>
               <button onClick={() => setProfileUser(null)} className="flex-1 py-2 glass rounded-md">Close</button>

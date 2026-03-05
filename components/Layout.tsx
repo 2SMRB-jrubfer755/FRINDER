@@ -18,14 +18,14 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, t })
   ];
 
   return (
-    <div className="flex flex-col h-screen md:flex-row bg-secondary overflow-hidden">
+    <div className="flex flex-col h-screen md:flex-row bg-secondary-dark dark:bg-secondary-dark bg-secondary-light overflow-hidden">
       {/* Sidebar for Desktop */}
       <aside className="hidden md:flex flex-col w-72 lg:w-80 glass border-r border-accent/20 p-6 lg:p-8 z-10 shadow-2xl">
         <div className="flex flex-col items-center justify-center mb-16 w-full text-center">
-          <h1 className="text-5xl lg:text-6xl font-display font-bold text-accent italic text-glow animate-pulse w-full">
+          <h1 className="text-5xl lg:text-6xl font-display font-bold text-accent-dark dark:text-accent-dark text-accent-light italic text-glow animate-pulse w-full">
             FRINDER
           </h1>
-          <p className="text-[10px] font-black text-accent/40 uppercase tracking-[0.8em] mt-2">Connect & Play</p>
+          <p className="text-[10px] font-black text-accent-50/40 uppercase tracking-[0.8em] mt-2">Connect & Play</p>
         </div>
         <nav className="flex-1 space-y-3 lg:space-y-4">
           {tabs.map(tab => (
@@ -35,7 +35,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, t })
               className={`w-full flex items-center space-x-4 lg:space-x-5 px-5 lg:px-6 py-3.5 lg:py-4 rounded-2xl lg:rounded-[26px] transition-all duration-300 ${
                 activeTab === tab.id 
                   ? 'bg-primary text-white shadow-2xl shadow-primary/40 scale-105 border-2 border-white/20' 
-                  : 'text-accent/60 hover:text-accent hover:bg-accent/5'
+                  : 'text-accent-50/60 hover:text-accent hover:bg-accent/5'
               }`}
             >
               <span className="text-2xl lg:text-3xl">{tab.icon}</span>
@@ -45,7 +45,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, t })
         </nav>
         
         <div className="mt-auto glass p-5 lg:p-6 rounded-3xl border-2 border-primary/30 bg-primary/10 group cursor-pointer hover:border-primary/60 transition-all text-center shadow-lg">
-          <p className="text-[10px] text-accent/50 uppercase tracking-[0.3em] mb-3 font-black">FRINDER GOLD</p>
+          <p className="text-[10px] text-accent-50 uppercase tracking-[0.3em] mb-3 font-black">FRINDER GOLD</p>
           <p className="text-base lg:text-lg font-black text-white mb-4 leading-tight group-hover:text-accent transition-colors uppercase tracking-tight">BOOST YOUR VIBE</p>
           <button onClick={() => setActiveTab('settings')} className="w-full py-3.5 lg:py-4 bg-accent text-secondary rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white transition-all shadow-xl active:scale-95">
             GO PREMIUM

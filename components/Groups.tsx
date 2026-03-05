@@ -8,10 +8,12 @@ interface GroupsProps {
   currentUserId?: string | null;
   onAddGroup: (group: Group) => void;
   onRequestEntrance?: (groupId: string) => Promise<void>;
+  onNotification?: (message: string, type?: 'success' | 'error' | 'info') => void;
+}
   t: (key: string) => string;
 }
 
-const Groups: React.FC<GroupsProps> = ({ groups, users, currentUserId, onAddGroup, t }) => {
+const Groups: React.FC<GroupsProps> = ({ groups, users, currentUserId, onAddGroup, t, onNotification }) => {
   const [showCreate, setShowCreate] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupGame, setNewGroupGame] = useState('Valorant');
@@ -69,21 +71,21 @@ const Groups: React.FC<GroupsProps> = ({ groups, users, currentUserId, onAddGrou
           <p className="text-accent/80 mb-5 md:mb-7 italic text-sm md:text-base leading-relaxed">The place where pro dreams are born. Daily 10-mans and VOD reviews with the best coaches.</p>
           <button onClick={async () => {
             if (!currentUserId) {
-              alert('Por favor, inicia sesión para unirte a grupos');
+              onNotification?.('Por favor, inicia sesión para unirte a grupos', 'error');
               return;
             }
             try {
               // Join the featured "ELITE SCRIMS HUB" group
               const eliteGroupId = groups.find(g => g.name.includes('ELITE'))?.id || groups[0]?.id;
               if (!eliteGroupId) {
-                alert('No se encontró el grupo Elite');
+                onNotification?.('No se encontró el grupo Elite', 'error');
                 return;
               }
               await onRequestEntrance(eliteGroupId);
-              alert('Solicitud enviada al grupo Elite');
+              onNotification?.('Solicitud enviada al grupo Elite', 'success');
             } catch (err) {
               console.error('Failed to join elite group', err);
-              alert('No se pudo enviar la solicitud');
+              onNotification?.('No se pudo enviar la solicitud', 'error');
             }
           }} className="w-fit px-5 md:px-8 py-2.5 md:py-3 bg-white text-secondary font-black rounded-xl md:rounded-2xl uppercase tracking-[0.14em] md:tracking-[0.2em] hover:bg-accent hover:scale-105 transition-all shadow-xl text-[10px] md:text-xs">JOIN ELITE</button>
         </div>

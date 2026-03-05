@@ -8,9 +8,11 @@ interface DiscoverProps {
   preferences: UserPreferences;
   currentUserId?: string | null;
   onUpdateFavorites?: (favorites: string[]) => void;
+  onNotification?: (message: string, type?: 'success' | 'error' | 'info') => void;
+}
 }
 
-const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, currentUserId, onUpdateFavorites }) => {
+const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, currentUserId, onUpdateFavorites, onNotification }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
@@ -66,7 +68,7 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, curren
 
   return (
     <div className="flex flex-col items-center animate-in fade-in slide-in-from-bottom-10 duration-700">
-      <div className="relative w-full max-w-md md:max-w-xl aspect-[4/5] rounded-[36px] md:rounded-[48px] overflow-hidden card-depth group bg-secondary border border-accent/10 shadow-[0_30px_70px_rgba(0,0,0,0.7)]">
+      <div className="relative w-full max-w-md md:max-w-xl aspect-[4/5] rounded-[36px] md:rounded-[48px] overflow-hidden card-depth group bg-secondary-dark dark:bg-secondary-dark bg-secondary-light border border-accent/10 shadow-[0_30px_70px_rgba(0,0,0,0.7)]">
         {/* Background Blur */}
         <div
           className="absolute inset-0 bg-cover bg-center blur-3xl opacity-40 scale-125 transition-transform duration-1000 group-hover:scale-110"
@@ -81,13 +83,13 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, curren
         />
 
         {/* Overlay Content */}
-        {!showDetails && <div className="absolute inset-0 bg-gradient-to-t from-secondary via-transparent to-transparent opacity-90" />}
+        {!showDetails && <div className="absolute inset-0 bg-gradient-to-t from-secondary-dark dark:from-secondary-dark from-secondary-light via-transparent to-transparent opacity-90" />}
 
         {/* Basic Info */}
         {!showDetails && (
           <div className="absolute bottom-0 left-0 right-0 p-6 md:p-10 pt-12 md:pt-20">
             <div className="flex items-center space-x-3 mb-4 md:mb-6">
-              <h2 className="text-3xl md:text-5xl font-black text-white tracking-tight">
+              <h2 className="text-3xl md:text-5xl font-black text-accent-dark dark:text-accent-dark text-accent-light tracking-tight">
                 {currentUser.name.split(' ')[0]}, {currentUser.age}
               </h2>
               {currentUser.isOnline && (
@@ -112,7 +114,7 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, curren
               </button>
             </div>
 
-            <p className="text-white/80 line-clamp-2 mb-6 md:mb-8 text-base md:text-xl font-medium italic leading-snug">
+            <p className="text-accent-50/80 line-clamp-2 mb-6 md:mb-8 text-base md:text-xl font-medium italic leading-snug">
               "{currentUser.bio}"
             </p>
 
@@ -121,7 +123,7 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, curren
               <button onClick={handleLike} className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary flex items-center justify-center text-4xl md:text-5xl shadow-[0_20px_60px_rgba(161,24,24,0.6)] hover:scale-110 transition-all active:scale-95 border-4 border-white/10">🔥</button>
               <button onClick={() => {
                 if (!currentUserId) {
-                  alert('Por favor, inicia sesión para añadir favoritos');
+                  onNotification?.('Por favor, inicia sesión para añadir favoritos', 'error');
                   return;
                 }
                 const isFavorite = currentUser.id && (currentUser as any).favoritedBy?.includes(currentUserId);

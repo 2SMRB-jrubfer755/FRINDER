@@ -5,9 +5,10 @@ import { api } from '../services/api';
 
 interface RewardsProps {
   currentUserId?: string | null;
+  onNotification?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-const Rewards: React.FC<RewardsProps> = ({ currentUserId }) => {
+const Rewards: React.FC<RewardsProps> = ({ currentUserId, onNotification }) => {
   const [joined, setJoined] = useState<Record<string, boolean>>({});
   const [showRedeemStore, setShowRedeemStore] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
@@ -77,7 +78,7 @@ const Rewards: React.FC<RewardsProps> = ({ currentUserId }) => {
               ].map((item, i) => (
                 <div key={i} className="glass p-4 rounded-2xl flex justify-between items-center border border-accent/10">
                   <span className="font-black text-white">{item.name}</span>
-                  <button onClick={() => alert(`Redeemed: ${item.name}`)} className="px-4 py-2 bg-primary text-white font-black rounded-lg hover:scale-105 transition-all">{item.cost}</button>
+                  <button onClick={() => onNotification?.(`Canjeado: ${item.name}`, 'success')} className="px-4 py-2 bg-primary text-white font-black rounded-lg hover:scale-105 transition-all">{item.cost}</button>
                 </div>
               ))}
             </div>
@@ -117,7 +118,7 @@ const Rewards: React.FC<RewardsProps> = ({ currentUserId }) => {
       <section>
         <div className="flex items-center justify-between mb-6">
           <h3 className="text-2xl font-bold">Upcoming Tournaments</h3>
-          <button onClick={() => alert('Showing all tournaments')} className="text-primary font-bold hover:underline">View All</button>
+          <button onClick={() => onNotification?.('Mostrando todos los torneos', 'info')} className="text-primary font-bold hover:underline">View All</button>
         </div>
           {tournaments.map(t => (
             <div key={t.id} className="group glass rounded-3xl overflow-hidden border border-accent/10 hover:border-primary/50 transition-all card-depth">
@@ -174,7 +175,7 @@ const Rewards: React.FC<RewardsProps> = ({ currentUserId }) => {
               </div>
               <div className="text-right">
                 <p className="text-primary font-bold">{q.reward}</p>
-                <button className="text-[10px] font-bold uppercase tracking-tighter text-accent/40 hover:text-accent">Details →</button>
+                <button onClick={() => onNotification?.(`Detalles de ${q.quest}: ${q.reward} puntos`, 'info')} className="text-[10px] font-bold uppercase tracking-tighter text-accent/40 hover:text-accent">Details →</button>
               </div>
             </div>
           ))}

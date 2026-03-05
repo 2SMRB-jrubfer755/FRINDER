@@ -10,9 +10,10 @@ interface ChatDetailProps {
   // include optional updated chat object from server
   onSendMessage: (chatId: string, message: Message, updatedChat?: Chat) => void;
   onBack: () => void;
+  onNotification?: (message: string, type?: 'success' | 'error' | 'info') => void;
 }
 
-const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, currentUserId, onSendMessage, onBack }) => {
+const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, currentUserId, onSendMessage, onBack, onNotification }) => {
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -55,12 +56,12 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, currentUserId, onSe
     if (file) {
       // basic validation: only images under 2MB
       if (!file.type.startsWith('image/')) {
-        alert('Solo se permiten imágenes como archivo adjunto.');
+        onNotification?.('Solo se permiten imágenes como archivo adjunto.', 'error');
       } else if (file.size > 2 * 1024 * 1024) {
-        alert('El archivo es demasiado pesado. Máximo 2MB.');
+        onNotification?.('El archivo es demasiado pesado. Máximo 2MB.', 'error');
       } else {
         console.log('Attached file:', file);
-        alert(`Archivo adjuntado: ${file.name}`);
+        onNotification?.(`Archivo adjuntado: ${file.name}`, 'success');
       }
     }
     // reset input value so same file can be selected again
@@ -97,7 +98,7 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, currentUserId, onSe
         }} className="text-xl opacity-50 hover:opacity-100">📞</button>
         <button onClick={() => {
           // Open chat settings menu (future enhancement)
-          console.log('Chat settings opened');
+          onNotification?.('Configuración del chat próximamente', 'info');
         }} className="text-xl opacity-50 hover:opacity-100 active:scale-75 transition-all">⚙️</button>
       </header>
 
