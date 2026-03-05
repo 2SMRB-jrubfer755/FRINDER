@@ -1,12 +1,17 @@
 import express, { Request, Response } from 'express';
 import Chat, { IChat, IMessage } from '../models/Chat';
+import { requireAuth, AuthenticatedRequest } from '../middleware/auth';
 
 const router = express.Router();
+router.use(requireAuth);
 
 // GET chats for a user
-router.get('/:userId', async (req: Request, res: Response) => {
+router.get('/:userId', async (req: AuthenticatedRequest, res: Response) => {
     try {
         const userId = req.params.userId;
+        if (req.userId !== userId) {
+            return res.status(403).json({ message: 'Unauthorized' });
+        }
         const chats = await Chat.find({ participants: userId });
         res.json(chats);
     } catch (error) {
@@ -14,24 +19,21 @@ router.get('/:userId', async (req: Request, res: Response) => {
     }
 });
 
-// CREATE or UPDATE a chat (Send message)
-router.post('/message', async (req: Request, res: Response) => {
+// CREATE or UPDATE a chat (Send message), user must belong to participants
+router.post('/message', async (req: AuthenticatedRequest, res: Response) => {
     try {
         const { chatId, participants, message } = req.body;
 
+        if (!Array.isArray(participants) || participants.length === 0) {
+            return res.status(400).json({ message: 'Participants list is required' });
+        }
+        const userId = req.userId;
+        if (!userId || !participants.includes(userId)) {
+            return res.status(403).json({ message: 'User not authorized for this chat' });
+        }
+
         let chat;
         if (chatId) {
-            // We're looking for an existing chat by ID, but since we are migrating from mock data where IDs were 'chat_1',
-            // and Mongo uses ObjectIds, we need to be careful.
-            // For this implementation, if chatId is provided try to find it.
-            // If not found, create new.
-
-            // Check if chatId is a valid ObjectId if we were strictly using ObjectIds, 
-            // but here we might have custom logic.
-            // Let's assume we search by _id if it's a valid ObjectId, or maybe we just create if not found.
-
-            // Actually, the frontend sends a 'chatId' that might be 'chat_1'.
-            // We should probably rely on finding a chat with these exact participants if no ID is clear.
             try {
                 chat = await Chat.findById(chatId);
             } catch (e) {
@@ -40,7 +42,6 @@ router.post('/message', async (req: Request, res: Response) => {
         }
 
         if (!chat && participants) {
-            // Try to find by participants
             chat = await Chat.findOne({ participants: { $all: participants, $size: participants.length } });
         }
 

@@ -33,6 +33,10 @@ export interface IUser extends Document {
   password?: string;
   language?: string;
   notifications?: boolean;
+  theme?: 'light' | 'dark';
+  isPremium?: boolean;
+  favorites?: string[];
+  skipped?: string[];
   preferences?: {
     minAge?: number;
     maxAge?: number;
@@ -60,6 +64,10 @@ const UserSchema: Schema = new Schema({
   password: { type: String },
   language: { type: String },
   notifications: { type: Boolean, default: true },
+  theme: { type: String, enum: ['light', 'dark'], default: 'dark' },
+  isPremium: { type: Boolean, default: false },
+  favorites: [{ type: String }],
+  skipped: [{ type: String }],
   preferences: {
     minAge: { type: Number },
     maxAge: { type: Number },

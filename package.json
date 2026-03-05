@@ -9,7 +9,7 @@
     "dev:full": "concurrently -k -n FRONT,BACK \"npm run dev\" \"npm run dev:backend\"",
     "free-ports": "bash -c 'fuser -k 3000/tcp 5000/tcp >/dev/null 2>&1 || true'",
     "start:app": "npm run free-ports && npm run dev:full",
-    "build": "vite build",
+    "build": "vite build --mode production",
     "preview": "vite preview"
   },
   "dependencies": {

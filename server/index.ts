@@ -6,6 +6,7 @@ import userRoutes from './routes/users';
 import groupRoutes from './routes/groups';
 import tournamentRoutes from './routes/tournaments';
 import chatRoutes from './routes/chats';
+import sessionRoutes from './routes/sessions';
 
 dotenv.config();
 
@@ -26,6 +27,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/groups', groupRoutes);
 app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/chats', chatRoutes);
+app.use('/api/sessions', sessionRoutes);
 
 app.get('/', (req, res) => {
     res.send('Frinder API is running');

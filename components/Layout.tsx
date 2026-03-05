@@ -47,7 +47,7 @@ const Layout: React.FC<LayoutProps> = ({ children, activeTab, setActiveTab, t })
         <div className="mt-auto glass p-5 lg:p-6 rounded-3xl border-2 border-primary/30 bg-primary/10 group cursor-pointer hover:border-primary/60 transition-all text-center shadow-lg">
           <p className="text-[10px] text-accent/50 uppercase tracking-[0.3em] mb-3 font-black">FRINDER GOLD</p>
           <p className="text-base lg:text-lg font-black text-white mb-4 leading-tight group-hover:text-accent transition-colors uppercase tracking-tight">BOOST YOUR VIBE</p>
-          <button className="w-full py-3.5 lg:py-4 bg-accent text-secondary rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white transition-all shadow-xl active:scale-95">
+          <button onClick={() => setActiveTab('settings')} className="w-full py-3.5 lg:py-4 bg-accent text-secondary rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-white transition-all shadow-xl active:scale-95">
             GO PREMIUM
           </button>
         </div>

@@ -6,13 +6,17 @@ import { api } from '../services/api';
 interface ChatDetailProps {
   chat: Chat;
   user: User;
-  onSendMessage: (chatId: string, message: Message) => void;
+  currentUserId?: string | null;
+  // include optional updated chat object from server
+  onSendMessage: (chatId: string, message: Message, updatedChat?: Chat) => void;
   onBack: () => void;
 }
 
-const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBack }) => {
+const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, currentUserId, onSendMessage, onBack }) => {
   const [inputText, setInputText] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const chatId = (chat as any)._id || (chat as any).id;
 
   useEffect(() => {
     if (scrollRef.current) {
@@ -25,28 +29,42 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBa
 
     const userMessage: Message = {
       id: Date.now().toString(),
-      senderId: 'me',
+      senderId: currentUserId || 'me',
       text: inputText,
       timestamp: Date.now()
     };
 
     try {
       const updatedChat = await api.chats.sendMessage({
-        chatId: chat.id,
+        chatId: chatId,
         participants: chat.participants,
         message: userMessage
       });
 
-      // Notify parent to update chat list/state
-      // For now, we rely on the fact that if we re-fetch or if the parent updates, it shows.
-      // But ChatDetail props 'chat' comes from parent. 
-      // Ideally we should call a prop onSendMessage that updates the parent state.
-      onSendMessage(chat.id, userMessage);
+      // Notify parent to update chat list/state with returned object
+      onSendMessage(chatId, userMessage, updatedChat);
 
       setInputText('');
     } catch (e) {
       console.error("Failed to send message", e);
     }
+  };
+
+  const handleFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // basic validation: only images under 2MB
+      if (!file.type.startsWith('image/')) {
+        alert('Solo se permiten imágenes como archivo adjunto.');
+      } else if (file.size > 2 * 1024 * 1024) {
+        alert('El archivo es demasiado pesado. Máximo 2MB.');
+      } else {
+        console.log('Attached file:', file);
+        alert(`Archivo adjuntado: ${file.name}`);
+      }
+    }
+    // reset input value so same file can be selected again
+    if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
   return (
@@ -63,8 +81,24 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBa
           <p className="text-[10px] text-accent/50 uppercase tracking-widest font-bold">In-Game: Valorant</p>
         </div>
         <div className="flex-1" />
-        <button className="text-xl opacity-50 hover:opacity-100">📞</button>
-        <button className="text-xl opacity-50 hover:opacity-100">⚙️</button>
+        <button onClick={async () => {
+          try {
+            const callMessage: Message = {
+              id: Date.now().toString(),
+              senderId: currentUserId || 'me',
+              text: '📞 Started a voice call',
+              timestamp: Date.now()
+            };
+            await api.chats.sendMessage({ chatId: chatId, participants: chat.participants, message: callMessage });
+            onSendMessage(chatId, callMessage);
+          } catch (e) {
+            console.error('Failed to record call message', e);
+          }
+        }} className="text-xl opacity-50 hover:opacity-100">📞</button>
+        <button onClick={() => {
+          // Open chat settings menu (future enhancement)
+          console.log('Chat settings opened');
+        }} className="text-xl opacity-50 hover:opacity-100 active:scale-75 transition-all">⚙️</button>
       </header>
 
       {/* Messages */}
@@ -77,27 +111,28 @@ const ChatDetail: React.FC<ChatDetailProps> = ({ chat, user, onSendMessage, onBa
             <p className="text-accent/30 italic text-sm">Say something to break the ice!</p>
           </div>
         )}
-        {chat.messages.map((m) => (
-          <div
-            key={m.id}
-            className={`flex ${m.senderId === 'me' ? 'justify-end' : 'justify-start'}`}
-          >
-            <div className={`
-              max-w-[80%] px-4 py-3 rounded-2xl text-sm font-medium leading-relaxed
-              ${m.senderId === 'me'
-                ? 'bg-primary text-white rounded-br-none shadow-lg shadow-primary/20'
-                : 'glass border border-accent/10 text-accent rounded-bl-none'}
-            `}>
-              {m.text}
+        {chat.messages.map((m) => {
+          const isMine = m.senderId === (currentUserId || 'me');
+          return (
+            <div key={m.id} className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}>
+              <div className={`
+                max-w-[80%] px-4 py-3 rounded-2xl text-sm font-medium leading-relaxed
+                ${isMine
+                  ? 'bg-primary text-white rounded-br-none shadow-lg shadow-primary/20'
+                  : 'glass border border-accent/10 text-accent rounded-bl-none'}
+              `}>
+                {m.text}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Input */}
       <div className="p-4 border-t border-accent/10">
         <div className="glass flex items-center px-4 py-2 rounded-2xl border border-accent/20 focus-within:border-primary transition-all">
-          <button className="mr-3 opacity-50 text-xl">📎</button>
+          <button onClick={() => fileInputRef.current?.click()} className="mr-3 opacity-50 text-xl">📎</button>
+          <input ref={fileInputRef} type="file" onChange={handleFile} className="hidden" />
           <input
             value={inputText}
             onChange={(e) => setInputText(e.target.value)}

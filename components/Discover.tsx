@@ -1,27 +1,42 @@
 import React, { useState } from 'react';
 import { User, UserPreferences } from '../types';
+import { api } from '../services/api';
 
 interface DiscoverProps {
   users: User[];
   onMatch: (user: User) => void;
   preferences: UserPreferences;
+  currentUserId?: string | null;
+  onUpdateFavorites?: (favorites: string[]) => void;
 }
 
-const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences }) => {
+const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, currentUserId, onUpdateFavorites }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
+  const [skipped, setSkipped] = useState<Set<string>>(new Set());
 
   // Filter users based on preferences (simplified for demo)
   const filteredUsers = users.filter(u =>
     u.age >= preferences.ageRange[0] &&
     u.age <= preferences.ageRange[1] &&
-    u.distance <= preferences.distanceMax
+    u.distance <= preferences.distanceMax &&
+    !skipped.has(u.id || u._id)
   );
 
   const currentUser = filteredUsers[currentIndex] || users[0];
 
-  const handleNext = () => {
+  const handleNext = async () => {
     setShowDetails(false);
+    // Skip this user
+    try {
+      if (currentUserId && currentUser.id) {
+        await api.users.skipUser(currentUserId, currentUser.id);
+        setSkipped(prev => new Set(prev).add(currentUser.id));
+      }
+    } catch (err) {
+      console.error('Failed to skip user', err);
+    }
+    
     if (currentIndex < filteredUsers.length - 1) {
       setCurrentIndex(prev => prev + 1);
     } else {
@@ -29,7 +44,15 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences }) => {
     }
   };
 
-  const handleLike = () => {
+  const handleLike = async () => {
+    // Add to favorites when liking
+    if (currentUserId && currentUser.id) {
+      try {
+        await api.users.addFavorite(currentUserId, currentUser.id);
+      } catch (err) {
+        console.error('Failed to add to favorites', err);
+      }
+    }
     onMatch(currentUser);
     handleNext();
   };
@@ -96,7 +119,18 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences }) => {
             <div className="flex items-center justify-between px-1 md:px-3">
               <button onClick={handleNext} className="w-14 h-14 md:w-18 md:h-18 rounded-full glass border-accent/20 flex items-center justify-center text-3xl md:text-4xl hover:bg-primary/30 transition-all hover:scale-110 shadow-2xl active:scale-95">👎</button>
               <button onClick={handleLike} className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary flex items-center justify-center text-4xl md:text-5xl shadow-[0_20px_60px_rgba(161,24,24,0.6)] hover:scale-110 transition-all active:scale-95 border-4 border-white/10">🔥</button>
-              <button className="w-14 h-14 md:w-18 md:h-18 rounded-full glass border-accent/20 flex items-center justify-center text-3xl md:text-4xl hover:bg-yellow-500/30 transition-all hover:scale-110 shadow-2xl active:scale-95">⭐</button>
+              <button onClick={() => {
+                if (!currentUserId) {
+                  alert('Por favor, inicia sesión para añadir favoritos');
+                  return;
+                }
+                const isFavorite = currentUser.id && (currentUser as any).favoritedBy?.includes(currentUserId);
+                if (isFavorite) {
+                  api.users.removeFavorite(currentUserId, currentUser.id).catch(err => console.error('Failed to remove favorite', err));
+                } else {
+                  api.users.addFavorite(currentUserId, currentUser.id).catch(err => console.error('Failed to add favorite', err));
+                }
+              }} className={`w-14 h-14 md:w-18 md:h-18 rounded-full glass border-accent/20 flex items-center justify-center text-3xl md:text-4xl hover:bg-yellow-500/30 transition-all hover:scale-110 shadow-2xl active:scale-95 ${(currentUser as any).favoritedBy?.includes(currentUserId) ? 'bg-yellow-400/30' : ''}`}>⭐</button>
             </div>
           </div>
         )}
