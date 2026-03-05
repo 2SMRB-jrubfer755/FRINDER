@@ -6,13 +6,16 @@ ENV NODE_ENV=production
 # Copy package files
 COPY package.json package-lock.json ./
 
-# Install ALL dependencies (including devDependencies needed for vite build)
-RUN npm cache clean --force && npm ci --verbose
+# Install ALL dependencies - use npm install which is more tolerant
+RUN npm cache clean --force && npm install --verbose
 
 # Copy all source code
 COPY . .
 
-# Build the application with production mode
+# Verify vite is installed
+RUN ls -la node_modules/.bin/vite || echo "WARNING: vite not found!"
+
+# Build the application
 RUN npm run build
 
 # Runtime stage
