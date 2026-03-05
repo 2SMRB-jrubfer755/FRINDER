@@ -37,37 +37,14 @@ Frinder — encuentra a las personas que encajan contigo.
 
 ## 🚀 Despliegue con Docker
 
-### Prerrequisitos
-- Docker y Docker Compose instalados
-- Puertos 3000, 5000 y 27017 disponibles
-
 ### Despliegue Rápido
 ```bash
-# Construir y ejecutar todos los servicios
+npm run docker:clean
 npm run docker:build
 npm run docker:up
-
-# Ver logs
-npm run docker:logs
 ```
 
-### Acceder a la aplicación
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:5000
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000
 
-### Comandos útiles
-```bash
-# Detener servicios
-npm run docker:down
-
-# Limpiar contenedores y volúmenes
-npm run docker:clean
-
-# Ver estado de servicios
-docker compose ps
-```
-
-### Solución de problemas
-- Si hay errores de build, ejecuta `npm run docker:clean` y luego `npm run docker:build`
-- Asegúrate de que los puertos estén libres
-- Los healthchecks pueden tardar hasta 2 minutos
+**[📖 Guía Completa de Docker](./DOCKER_SETUP.md)** - Troubleshooting, logs, y más información

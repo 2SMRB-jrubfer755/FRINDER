@@ -6,7 +6,8 @@
     "scripts": {
         "start": "ts-node --project tsconfig.json index.ts",
         "dev": "nodemon --watch . --ext ts --exec \"ts-node --project tsconfig.json\" index.ts",
-        "seed": "ts-node --project tsconfig.json seed.ts"
+        "seed": "ts-node --project tsconfig.json seed.ts",
+        "health": "node -e \"require('http').get('http://localhost:5000/health', (res) => { if(res.statusCode !== 200) throw new Error(res.statusCode); });\" 2>/dev/null || exit 1"
     },
     "keywords": [],
     "author": "",
