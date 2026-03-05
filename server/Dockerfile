@@ -1,27 +1,20 @@
-FROM node:20-alpine
+FROM node:20
 WORKDIR /app
-ENV NODE_ENV=production
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package.json ./
 
-# Install ALL dependencies - use npm install for robustness
-RUN npm cache clean --force && npm install
+# Install dependencies - clean install without lock file
+RUN npm cache clean --force && \
+    rm -f package-lock.json && \
+    npm install
 
 # Copy source code
 COPY . .
 
-# Verify ts-node is installed
-RUN ls -la node_modules/.bin/ts-node || echo "WARNING: ts-node not found!"
-
-# Create non-root user for security
-RUN addgroup -g 1001 -S nodejs && adduser -S nodeapp -u 1001
-RUN chown -R nodeapp:nodejs /app
-USER nodeapp
-
 EXPOSE 5000
 
-# Health check with better compatibility
+# Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
   CMD npm run health || exit 1
 

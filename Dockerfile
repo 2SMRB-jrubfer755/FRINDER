@@ -1,19 +1,17 @@
 # Build stage
-FROM node:20-alpine AS builder
+FROM node:20 AS builder
 WORKDIR /build
-ENV NODE_ENV=production
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package.json ./
 
-# Install ALL dependencies - use npm install which is more tolerant
-RUN npm cache clean --force && npm install --verbose
+# Install dependencies - reinstall clean sin lock file
+RUN npm cache clean --force && \
+    rm -f package-lock.json && \
+    npm install
 
 # Copy all source code
 COPY . .
-
-# Verify vite is installed
-RUN ls -la node_modules/.bin/vite || echo "WARNING: vite not found!"
 
 # Build the application
 RUN npm run build
