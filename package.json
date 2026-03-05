@@ -10,7 +10,12 @@
     "free-ports": "bash -c 'fuser -k 3000/tcp 5000/tcp >/dev/null 2>&1 || true'",
     "start:app": "npm run free-ports && npm run dev:full",
     "build": "vite build --mode production",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docker:build": "docker compose build --no-cache",
+    "docker:up": "docker compose up -d",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "docker:clean": "docker compose down -v --remove-orphans && docker system prune -f"
   },
   "dependencies": {
     "react": "^19.2.3",

@@ -1,8 +1,11 @@
+version: '3.8'
+
 services:
   mongodb:
     image: mongo:7
     container_name: frinder-mongodb
     restart: unless-stopped
+    pull_policy: always
     environment:
       MONGO_INITDB_DATABASE: frinder
     volumes:
@@ -12,7 +15,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
-      start_period: 20s
+      start_period: 30s
 
   backend:
     build:
@@ -20,27 +23,43 @@ services:
       dockerfile: Dockerfile
     container_name: frinder-backend
     restart: unless-stopped
+    pull_policy: always
     environment:
       PORT: 5000
       MONGODB_URI: mongodb://mongodb:27017/frinder
+      NODE_ENV: production
     depends_on:
       mongodb:
         condition: service_healthy
     ports:
       - "127.0.0.1:5000:5000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
 
   frontend:
     build:
       context: .
       dockerfile: Dockerfile
-      # Force fresh build each time - don't use cache
-      no_cache: true
+      args:
+        BUILDKIT_INLINE_CACHE: 1
     container_name: frinder-frontend
     restart: unless-stopped
+    pull_policy: always
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
     ports:
       - "127.0.0.1:3000:80"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
 
 volumes:
   mongo_data:

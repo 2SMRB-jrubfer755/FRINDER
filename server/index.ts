@@ -29,6 +29,11 @@ app.use('/api/tournaments', tournamentRoutes);
 app.use('/api/chats', chatRoutes);
 app.use('/api/sessions', sessionRoutes);
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+    res.status(200).json({ status: 'healthy', timestamp: new Date().toISOString() });
+});
+
 app.get('/', (req, res) => {
     res.send('Frinder API is running');
 });
