@@ -34,3 +34,17 @@ Estado del proyecto
 Frinder se encuentra en desarrollo activo. La visión es crecer de forma progresiva, escuchando a los usuarios y priorizando siempre la calidad de la experiencia.
 
 Frinder — encuentra a las personas que encajan contigo.
+
+## 🚀 Despliegue con Docker
+
+### Despliegue Rápido
+```bash
+npm run docker:clean
+npm run docker:build
+npm run docker:up
+```
+
+- **Frontend**: http://localhost:3000
+- **Backend API**: http://localhost:5000
+
+**[📖 Guía Completa de Docker](./DOCKER_SETUP.md)** - Troubleshooting, logs, y más información

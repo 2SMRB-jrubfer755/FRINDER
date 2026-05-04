@@ -10,9 +10,7 @@
       "DOM.Iterable"
     ],
     "skipLibCheck": true,
-    "types": [
-      "node"
-    ],
+    // "types" removed so build doesn't fail if @types/node is absent in production
     "moduleResolution": "bundler",
     "isolatedModules": true,
     "moduleDetection": "force",

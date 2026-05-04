@@ -1,0 +1,107 @@
+/* Base styles */
+body {
+  font-family: 'Outfit', sans-serif;
+  background-color: #322626;
+  color: #F2D78C;
+  margin: 0;
+  overflow-x: hidden;
+  font-size: 16px;
+  line-height: 1.4;
+}
+
+.font-display {
+  font-family: 'Playfair Display', serif;
+}
+
+/* Scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #322626;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #A11818;
+  border-radius: 20px;
+}
+
+/* Glass effect */
+.glass {
+  background: rgba(50, 38, 38, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(242, 215, 140, 0.15);
+}
+
+/* Card depth */
+.card-depth {
+  box-shadow: 0 40px 100px rgba(0, 0, 0, 0.8);
+}
+
+/* Text glow */
+.text-glow {
+  text-shadow: 0 0 20px rgba(161, 24, 24, 0.8);
+}
+
+/* No scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Animation for detail view */
+@keyframes slideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Light theme styles */
+.light {
+  --bg-primary: #F8F9FA;
+  --bg-secondary: #FFFFFF;
+  --text-primary: #212529;
+  --text-secondary: #6C757D;
+  --accent: #A11818;
+  --border: #DEE2E6;
+  --glass-bg: rgba(255, 255, 255, 0.8);
+  --glass-border: rgba(0, 0, 0, 0.1);
+  --shadow: rgba(0, 0, 0, 0.1);
+}
+
+.light body {
+  background-color: var(--bg-primary);
+  color: var(--text-primary);
+}
+
+.light ::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+
+.light ::-webkit-scrollbar-thumb {
+  background: var(--accent);
+}
+
+.light .glass {
+  background: var(--glass-bg);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid var(--glass-border);
+}
+
+.light .card-depth {
+  box-shadow: 0 40px 100px var(--shadow);
+}
+
+.light .text-glow {
+  text-shadow: 0 0 20px rgba(161, 24, 24, 0.4);
+}

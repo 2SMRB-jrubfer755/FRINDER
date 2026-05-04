@@ -4,9 +4,11 @@ import React from 'react';
 interface PremiumOverlayProps {
   onClose: () => void;
   t: (key: string) => string;
+  currentUserId?: string | null;
+  onPurchase?: () => void;
 }
 
-const PremiumOverlay: React.FC<PremiumOverlayProps> = ({ onClose, t }) => {
+const PremiumOverlay: React.FC<PremiumOverlayProps> = ({ onClose, t, onPurchase }) => {
   const perks = [
     { title: 'Unlimited Matches', sub: 'Swipe as much as you want, no limits. Find your squad faster.', icon: '⚡' },
     { title: 'Global Passport', icon: '🌍', sub: 'Play with people from any country. No borders, just games.' },
@@ -42,7 +44,15 @@ const PremiumOverlay: React.FC<PremiumOverlayProps> = ({ onClose, t }) => {
         </div>
 
         <div className="relative z-10 space-y-4">
-            <button className="w-full py-6 bg-accent text-secondary font-black text-2xl rounded-[35px] shadow-2xl hover:bg-white active:scale-95 transition-all">
+            <button onClick={async () => {
+              try {
+                if (onPurchase) await onPurchase();
+                else alert('Purchase simulated — thank you!');
+              } catch (e) {
+                console.error('Purchase failed', e);
+                alert('No se pudo completar la compra.');
+              }
+            }} className="w-full py-6 bg-accent text-secondary font-black text-2xl rounded-[35px] shadow-2xl hover:bg-white active:scale-95 transition-all">
               GO GOLD FOR $9.99 / MO
             </button>
             <p className="text-center text-[10px] text-accent/30 font-bold uppercase tracking-widest">

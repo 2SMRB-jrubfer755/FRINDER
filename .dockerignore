@@ -8,3 +8,6 @@ README.md
 npm-debug.log*
 .vscode
 .DS_Store
+.env
+.env.local
+.env.*.local

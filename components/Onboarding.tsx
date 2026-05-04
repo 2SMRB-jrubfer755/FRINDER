@@ -18,24 +18,52 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, t, onBack }) => {
     minAge: 18,
     maxAge: 35,
     distance: 25,
-    avatar: 'https://i.pravatar.cc/300?u=1',
+    avatar: 'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer1',
     games: [] as string[],
     skills: [] as string[]
   });
+  const [errorMessage, setErrorMessage] = useState<string>('');
+
+  const validateStep1 = () => {
+    // clear previous
+    setErrorMessage('');
+    if (!formData.email) {
+      setErrorMessage('El correo electrónico es obligatorio.');
+      return false;
+    }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(formData.email)) {
+      setErrorMessage('Por favor introduce un correo válido.');
+      return false;
+    }
+    if (!formData.password) {
+      setErrorMessage('La contraseña es obligatoria.');
+      return false;
+    }
+    if (formData.password.length < 6) {
+      setErrorMessage('La contraseña debe tener al menos 6 caracteres.');
+      return false;
+    }
+    if (!isLoginMode && !formData.name.trim()) {
+      setErrorMessage('El nombre de gamer es obligatorio para registrarse.');
+      return false;
+    }
+    return true;
+  };
 
   const gamesList = ['Valorant', 'CS2', 'LoL', 'Elden Ring', 'Fifa 24', 'Minecraft', 'Rocket League', 'Apex Legends', 'Dota 2', 'Fortnite'];
   const skillsList = ['Support 🛡️', 'Sniper 🎯', 'Leader 👑', 'Funny 😂', 'Strategic 🧠', 'Tryhard 🔥', 'Chilled 🌊', 'Carry ⚔️', 'Noob 🦆'];
   
   const avatars = [
-    'https://i.pravatar.cc/300?u=1',
-    'https://i.pravatar.cc/300?u=2',
-    'https://i.pravatar.cc/300?u=3',
-    'https://i.pravatar.cc/300?u=4',
-    'https://i.pravatar.cc/300?u=5',
-    'https://i.pravatar.cc/300?u=6',
-    'https://i.pravatar.cc/300?u=7',
-    'https://i.pravatar.cc/300?u=8',
-    'https://i.pravatar.cc/300?u=9',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer1',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer2',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer3',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer4',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer5',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer6',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer7',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer8',
+    'https://api.dicebear.com/7.x/pixel-art/svg?seed=gamer9',
   ];
 
   const toggleSelection = (item: string, field: 'games' | 'skills') => {
@@ -87,11 +115,19 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, t, onBack }) => {
                 onChange={e => setFormData({...formData, password: e.target.value})}
               />
             </div>
+            {errorMessage && <p className="text-red-500 text-center text-sm">{errorMessage}</p>}
             <div className="flex gap-3 w-full">
                 <button onClick={handleBack} className="flex-1 py-3.5 md:py-4 glass border border-accent/20 text-accent font-black text-sm md:text-base rounded-2xl active:scale-95 transition-all">VOLVER</button>
                 <button 
-                  onClick={isLoginMode ? () => onComplete({ ...formData, isLoginMode: true }) : handleNext}
-                  disabled={(!isLoginMode && !formData.name) || !formData.email || !formData.password}
+                  onClick={() => {
+                    if (validateStep1()) {
+                      if (isLoginMode) {
+                        onComplete({ ...formData, isLoginMode: true });
+                      } else {
+                        handleNext();
+                      }
+                    }
+                  }}
                   className="flex-[2] py-3.5 md:py-4 bg-primary text-white font-black text-sm md:text-base rounded-2xl shadow-2xl active:scale-95 transition-all uppercase tracking-[0.14em]"
                 >
                   {isLoginMode ? 'ENTRAR' : 'CONTINUAR'}
@@ -217,10 +253,26 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete, t, onBack }) => {
                 </div>
               </div>
             </div>
+            {errorMessage && <p className="text-red-500 text-center text-sm">{errorMessage}</p>}
             <div className="flex gap-3">
                 <button onClick={handleBack} className="flex-1 py-3.5 md:py-4 glass border border-accent/20 text-accent font-black text-sm md:text-base rounded-2xl active:scale-95 transition-all">ATRÁS</button>
                 <button 
-                  onClick={() => onComplete(formData)}
+                  onClick={async () => {
+                    // validate numeric preferences
+                    if (formData.minAge > formData.maxAge) {
+                      setErrorMessage('El rango de edad no es válido.');
+                      return;
+                    }
+                    if (formData.distance < 1 || formData.distance > 100) {
+                      setErrorMessage('La distancia debe estar entre 1 y 100 km.');
+                      return;
+                    }
+                    try {
+                      await onComplete(formData);
+                    } catch (err: any) {
+                      setErrorMessage(err?.message || 'Error en el registro');
+                    }
+                  }}
                   className="flex-[2] py-3.5 md:py-4 bg-primary text-white font-black text-base md:text-lg rounded-2xl shadow-[0_20px_50px_rgba(161,24,24,0.4)] active:scale-95 transition-all uppercase tracking-[0.14em]"
                 >
                   ¡LISTO!

@@ -7,17 +7,25 @@ interface GroupsProps {
   users: User[];
   currentUserId?: string | null;
   onAddGroup: (group: Group) => void;
+  onRequestEntrance?: (groupId: string) => Promise<void>;
+  onNotification?: (message: string, type?: 'success' | 'error' | 'info') => void;
   t: (key: string) => string;
 }
 
-const Groups: React.FC<GroupsProps> = ({ groups, users, currentUserId, onAddGroup, t }) => {
+const Groups: React.FC<GroupsProps> = ({ groups, users, currentUserId, onAddGroup, onRequestEntrance, t, onNotification }) => {
   const [showCreate, setShowCreate] = useState(false);
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupGame, setNewGroupGame] = useState('Valorant');
   const [newGroupDesc, setNewGroupDesc] = useState('');
+  const [requested, setRequested] = useState<Record<string, boolean>>({});
+  const [groupError, setGroupError] = useState<string>('');
 
   const handleCreate = () => {
-    if (!newGroupName.trim()) return;
+    setGroupError('');
+    if (!newGroupName.trim()) {
+      setGroupError('El nombre del escuadrón no puede estar vacío.');
+      return;
+    }
 
     const newGroup: Group = {
       id: `g_${Date.now()}`,
@@ -60,7 +68,25 @@ const Groups: React.FC<GroupsProps> = ({ groups, users, currentUserId, onAddGrou
           <span className="text-[10px] font-black uppercase tracking-[0.25em] md:tracking-[0.34em] text-primary mb-2">Editor's Pick</span>
           <h3 className="text-2xl md:text-4xl font-black mb-3 text-white tracking-tight">ELITE SCRIMS HUB</h3>
           <p className="text-accent/80 mb-5 md:mb-7 italic text-sm md:text-base leading-relaxed">The place where pro dreams are born. Daily 10-mans and VOD reviews with the best coaches.</p>
-          <button className="w-fit px-5 md:px-8 py-2.5 md:py-3 bg-white text-secondary font-black rounded-xl md:rounded-2xl uppercase tracking-[0.14em] md:tracking-[0.2em] hover:bg-accent hover:scale-105 transition-all shadow-xl text-[10px] md:text-xs">JOIN ELITE</button>
+          <button onClick={async () => {
+            if (!currentUserId) {
+              onNotification?.('Por favor, inicia sesión para unirte a grupos', 'error');
+              return;
+            }
+            try {
+              // Join the featured "ELITE SCRIMS HUB" group
+              const eliteGroupId = groups.find(g => g.name.includes('ELITE'))?.id || groups[0]?.id;
+              if (!eliteGroupId) {
+                onNotification?.('No se encontró el grupo Elite', 'error');
+                return;
+              }
+              await onRequestEntrance(eliteGroupId);
+              onNotification?.('Solicitud enviada al grupo Elite', 'success');
+            } catch (err) {
+              console.error('Failed to join elite group', err);
+              onNotification?.('No se pudo enviar la solicitud', 'error');
+            }
+          }} className="w-fit px-5 md:px-8 py-2.5 md:py-3 bg-white text-secondary font-black rounded-xl md:rounded-2xl uppercase tracking-[0.14em] md:tracking-[0.2em] hover:bg-accent hover:scale-105 transition-all shadow-xl text-[10px] md:text-xs">JOIN ELITE</button>
         </div>
       </div>
 
@@ -96,8 +122,21 @@ const Groups: React.FC<GroupsProps> = ({ groups, users, currentUserId, onAddGrou
               )}
             </div>
 
-            <button className="mt-auto w-full py-3.5 md:py-4 glass border-2 border-accent/20 rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-[0.14em] md:tracking-[0.2em] hover:bg-primary hover:text-white hover:border-transparent transition-all shadow-xl active:scale-95">
-              Request Entrance
+            <button onClick={async () => {
+              if (onRequestEntrance) {
+                try {
+                  await onRequestEntrance((group as any)._id || group.id);
+                  setRequested(prev => ({ ...prev, [group.id]: true }));
+                } catch (err) {
+                  console.error('Request entrance failed', err);
+                  alert('No se pudo solicitar entrada.');
+                }
+              } else {
+                setRequested(prev => ({ ...prev, [group.id]: true }));
+                alert(`Entrance requested for ${group.name} (simulated)`);
+              }
+            }} className="mt-auto w-full py-3.5 md:py-4 glass border-2 border-accent/20 rounded-2xl font-black text-[10px] md:text-xs uppercase tracking-[0.14em] md:tracking-[0.2em] hover:bg-primary hover:text-white hover:border-transparent transition-all shadow-xl active:scale-95">
+              {requested[group.id] ? 'Requested' : 'Request Entrance'}
             </button>
           </div>
         ))}
@@ -116,6 +155,7 @@ const Groups: React.FC<GroupsProps> = ({ groups, users, currentUserId, onAddGrou
                   placeholder="e.g. Dream Team X"
                   className="w-full glass bg-transparent border-b-2 border-accent/20 py-3 text-base md:text-lg focus:border-primary outline-none transition-all placeholder:text-accent/20"
                 />
+                {groupError && <p className="text-red-500 text-sm mt-1">{groupError}</p>}
               </div>
               <div>
                 <label className="text-[10px] font-black uppercase text-accent/50 tracking-widest mb-3 block">Squad Bio</label>

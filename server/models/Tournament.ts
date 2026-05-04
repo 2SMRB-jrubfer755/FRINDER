@@ -7,6 +7,7 @@ export interface ITournament extends Document {
     date: string;
     image: string;
     partner: string;
+    participants?: string[];
 }
 
 const TournamentSchema: Schema = new Schema({
@@ -16,6 +17,7 @@ const TournamentSchema: Schema = new Schema({
     date: { type: String, required: true },
     image: { type: String, required: true },
     partner: { type: String, required: true }
+    , participants: [{ type: String }]
 }, {
     timestamps: true,
     toJSON: { virtuals: true },
