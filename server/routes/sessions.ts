@@ -72,7 +72,7 @@ router.get('/me', async (req: Request, res: Response) => {
     }
 
     res.json({
-      token,
+      token: session.token,
       userId: session.userId,
       user,
       expiresAt: session.expiresAt

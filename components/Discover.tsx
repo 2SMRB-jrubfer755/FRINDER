@@ -15,27 +15,38 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, curren
   const [currentIndex, setCurrentIndex] = useState(0);
   const [showDetails, setShowDetails] = useState(false);
   const [skipped, setSkipped] = useState<Set<string>>(new Set());
+  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [blockedUsers, setBlockedUsers] = useState<Set<string>>(new Set());
 
-  // Filter users based on preferences (simplified for demo)
-  const filteredUsers = users.filter(u =>
-    u.age >= preferences.ageRange[0] &&
-    u.age <= preferences.ageRange[1] &&
-    u.distance <= preferences.distanceMax &&
-    !skipped.has(u.id || u._id)
-  );
+  // Filter users based on preferences and blocked list
+  const filteredUsers = users.filter(u => {
+    const userId = u.id || u._id;
+    return (
+      u.age >= preferences.ageRange[0] &&
+      u.age <= preferences.ageRange[1] &&
+      u.distance <= preferences.distanceMax &&
+      !skipped.has(userId) &&
+      !blockedUsers.has(userId)
+    );
+  });
 
   const currentUser = filteredUsers[currentIndex] || users[0];
+  const currentUserId_str = currentUser ? (currentUser.id || currentUser._id) : null;
+  const isFavorite = currentUserId_str ? favorites.has(currentUserId_str) : false;
 
-  const handleNext = async () => {
+  // ✅ BOTÓN 1: 👎 PASS/SKIP - Descarta usuario
+  const handlePass = async () => {
     setShowDetails(false);
-    // Skip this user
     try {
-      if (currentUserId && currentUser.id) {
-        await api.users.skipUser(currentUserId, currentUser.id);
-        setSkipped(prev => new Set(prev).add(currentUser.id));
+      if (currentUserId && currentUserId_str && currentUser) {
+        await api.users.skipUser(currentUserId, currentUserId_str);
+        await api.users.addXP(currentUserId, 10, 'skipped_user');
+        setSkipped(prev => new Set(prev).add(currentUserId_str));
+        onNotification?.(`Pasaste a ${currentUser.name.split(' ')[0]} 👎`, 'info');
       }
     } catch (err) {
       console.error('Failed to skip user', err);
+      onNotification?.('Error al pasar usuario', 'error');
     }
     
     if (currentIndex < filteredUsers.length - 1) {
@@ -45,20 +56,64 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, curren
     }
   };
 
-  const handleLike = async () => {
-    // Add to favorites when liking
-    if (currentUserId && currentUser.id) {
-      try {
-        await api.users.addFavorite(currentUserId, currentUser.id);
-      } catch (err) {
-        console.error('Failed to add to favorites', err);
-      }
+  // ✅ BOTÓN 2: 🔥 MATCH - Crea chat y matchea
+  const handleMatch = async () => {
+    if (!currentUserId) {
+      onNotification?.('Por favor, inicia sesión para hacer match', 'error');
+      return;
     }
-    onMatch(currentUser);
-    handleNext();
+
+    try {
+      // Agregar a favoritos al hacer match
+      if (currentUserId_str && currentUser) {
+        await api.users.addFavorite(currentUserId, currentUserId_str);
+        await api.users.addXP(currentUserId, 25, 'matched_player');
+        
+        setFavorites(prev => new Set(prev).add(currentUserId_str));
+        
+        onNotification?.(`¡MATCH CON ${currentUser.name.toUpperCase()}! 🔥🔥`, 'success');
+        onMatch(currentUser); // Crea el chat
+        
+        // Skip automático después del match
+        setTimeout(() => handlePass(), 800);
+      }
+    } catch (err) {
+      console.error('Failed to match user', err);
+      onNotification?.('Error al hacer match', 'error');
+    }
   };
 
-  if (!currentUser) return (
+  // ✅ BOTÓN 3: ⭐ SAVE/FAVORITE - Guarda para después
+  const handleFavorite = async () => {
+    if (!currentUserId) {
+      onNotification?.('Por favor, inicia sesión para guardar favoritos', 'error');
+      return;
+    }
+
+    try {
+      if (isFavorite && currentUserId_str) {
+        // Remover de favoritos
+        await api.users.removeFavorite(currentUserId, currentUserId_str);
+        setFavorites(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(currentUserId_str);
+          return newSet;
+        });
+        onNotification?.(`Removido de favoritos ⭐`, 'info');
+      } else if (currentUserId_str && currentUser) {
+        // Agregar a favoritos (sin hacer match)
+        await api.users.addFavorite(currentUserId, currentUserId_str);
+        await api.users.addXP(currentUserId, 15, 'favorited_player');
+        setFavorites(prev => new Set(prev).add(currentUserId_str));
+        onNotification?.(`Guardado en favoritos ⭐ ${currentUser.name.split(' ')[0]}`, 'success');
+      }
+    } catch (err) {
+      console.error('Failed to toggle favorite', err);
+      onNotification?.('Error al guardar favorito', 'error');
+    }
+  };
+
+  if (!currentUser || !currentUserId_str) return (
     <div className="flex flex-col items-center justify-center py-24 opacity-20">
       <span className="text-6xl md:text-8xl mb-6">🎮</span>
       <h2 className="text-2xl md:text-3xl font-black uppercase tracking-wider text-center">No more players in range</h2>
@@ -118,20 +173,37 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, curren
             </p>
 
             <div className="flex items-center justify-between px-1 md:px-3">
-              <button onClick={handleNext} className="w-14 h-14 md:w-18 md:h-18 rounded-full glass border-accent/20 flex items-center justify-center text-3xl md:text-4xl hover:bg-primary/30 transition-all hover:scale-110 shadow-2xl active:scale-95">👎</button>
-              <button onClick={handleLike} className="w-20 h-20 md:w-24 md:h-24 rounded-full bg-primary flex items-center justify-center text-4xl md:text-5xl shadow-[0_20px_60px_rgba(161,24,24,0.6)] hover:scale-110 transition-all active:scale-95 border-4 border-white/10">🔥</button>
-              <button onClick={() => {
-                if (!currentUserId) {
-                  onNotification?.('Por favor, inicia sesión para añadir favoritos', 'error');
-                  return;
-                }
-                const isFavorite = currentUser.id && (currentUser as any).favoritedBy?.includes(currentUserId);
-                if (isFavorite) {
-                  api.users.removeFavorite(currentUserId, currentUser.id).catch(err => console.error('Failed to remove favorite', err));
-                } else {
-                  api.users.addFavorite(currentUserId, currentUser.id).catch(err => console.error('Failed to add favorite', err));
-                }
-              }} className={`w-14 h-14 md:w-18 md:h-18 rounded-full glass border-accent/20 flex items-center justify-center text-3xl md:text-4xl hover:bg-yellow-500/30 transition-all hover:scale-110 shadow-2xl active:scale-95 ${(currentUser as any).favoritedBy?.includes(currentUserId) ? 'bg-yellow-400/30' : ''}`}>⭐</button>
+              {/* BOTÓN 1: PASS */}
+              <button 
+                onClick={handlePass}
+                title="Pasar a este usuario"
+                className="w-14 h-14 md:w-18 md:h-18 rounded-full glass border-2 border-accent/40 flex items-center justify-center text-3xl md:text-4xl hover:bg-accent/20 transition-all hover:scale-110 shadow-2xl active:scale-95 group"
+              >
+                <span className="group-hover:animate-bounce">👎</span>
+              </button>
+
+              {/* BOTÓN 2: MATCH (Centro, más grande) */}
+              <button 
+                onClick={handleMatch}
+                title="¡HACER MATCH!"
+                className="w-20 h-20 md:w-28 md:h-28 rounded-full bg-gradient-to-br from-primary to-red-600 flex items-center justify-center text-5xl md:text-6xl shadow-[0_20px_60px_rgba(161,24,24,0.8)] hover:scale-110 transition-all active:scale-95 border-4 border-white/20 animate-pulse group relative"
+              >
+                <span className="group-hover:animate-spin">🔥</span>
+                <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-ping opacity-75"></div>
+              </button>
+
+              {/* BOTÓN 3: FAVORITE */}
+              <button 
+                onClick={handleFavorite}
+                title={isFavorite ? "Remover de favoritos" : "Guardar para después"}
+                className={`w-14 h-14 md:w-18 md:h-18 rounded-full glass border-2 flex items-center justify-center text-3xl md:text-4xl transition-all hover:scale-110 shadow-2xl active:scale-95 group ${
+                  isFavorite 
+                    ? 'border-yellow-400/60 bg-yellow-400/20' 
+                    : 'border-accent/40 hover:bg-yellow-500/20'
+                }`}
+              >
+                <span className={isFavorite ? 'animate-pulse' : ''}>⭐</span>
+              </button>
             </div>
           </div>
         )}
@@ -161,7 +233,38 @@ const Discover: React.FC<DiscoverProps> = ({ users, onMatch, preferences, curren
                   <p className="text-sm font-bold text-white truncate">{currentUser.discord || 'Hidden'}</p>
                 </div>
               </div>
-              <button onClick={handleLike} className="w-full py-4 md:py-5 bg-primary rounded-2xl md:rounded-3xl font-black text-base md:text-xl uppercase tracking-[0.18em] md:tracking-[0.26em] shadow-2xl shadow-primary/40 active:scale-95 transition-all border-2 border-white/10">MATCH NOW</button>
+
+              {/* Competitive Stats */}
+              <div className="grid grid-cols-3 gap-2 md:gap-3">
+                <div className="glass p-3 md:p-4 rounded-2xl border border-accent/10 text-center">
+                  <p className="text-2xl md:text-3xl font-black text-primary">{(currentUser as any).wins || 0}W</p>
+                  <p className="text-[10px] text-accent/50 uppercase font-bold">Wins</p>
+                </div>
+                <div className="glass p-3 md:p-4 rounded-2xl border border-accent/10 text-center">
+                  <p className="text-2xl md:text-3xl font-black text-accent">Lv.{(currentUser as any).level || 1}</p>
+                  <p className="text-[10px] text-accent/50 uppercase font-bold">Level</p>
+                </div>
+                <div className="glass p-3 md:p-4 rounded-2xl border border-accent/10 text-center">
+                  <p className="text-2xl md:text-3xl font-black text-green-400">{(currentUser as any).frins || 0}</p>
+                  <p className="text-[10px] text-accent/50 uppercase font-bold">Frins</p>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 md:gap-4 pt-4">
+                <button 
+                  onClick={() => setShowDetails(false)}
+                  className="flex-1 py-3 md:py-4 glass text-accent border-2 border-accent/20 rounded-2xl font-black uppercase tracking-[0.14em] text-[10px] md:text-xs hover:bg-accent/10 transition-all"
+                >
+                  Volver
+                </button>
+                <button 
+                  onClick={handleMatch}
+                  className="flex-1 py-3 md:py-4 bg-primary text-white rounded-2xl font-black uppercase tracking-[0.14em] text-[10px] md:text-xs shadow-xl shadow-primary/40 hover:scale-105 active:scale-95 transition-all border-2 border-white/10"
+                >
+                  ¡MATCH AHORA! 🔥
+                </button>
+              </div>
             </div>
           </div>
         )}

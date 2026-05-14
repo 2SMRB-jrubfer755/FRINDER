@@ -129,8 +129,8 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
               <div className="text-center md:text-left">
                 <h4 className="text-2xl md:text-3xl font-black text-accent-dark dark:text-accent-dark text-accent-light uppercase tracking-tight">{userProfile.name}</h4>
                 <div className="flex items-center justify-center md:justify-start gap-2 mt-2">
-                   <span className="bg-primary/20 text-primary px-3 py-1 rounded-lg text-[10px] font-black tracking-widest">LV. 42</span>
-                   <span className="bg-accent/20 text-accent px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase">Elite Gamer</span>
+                   <span className="bg-primary/20 text-primary px-3 py-1 rounded-lg text-[10px] font-black tracking-widest">LV. {userProfile.level || 1}</span>
+                   <span className="bg-accent/20 text-accent px-3 py-1 rounded-lg text-[10px] font-black tracking-widest uppercase">{(userProfile.wins || 0)}W - {(userProfile.losses || 0)}L</span>
                 </div>
               </div>
            </div>
@@ -238,8 +238,7 @@ const Settings: React.FC<SettingsProps> = ({ userProfile, onUpdateProfile, t, on
               >
                 <option value="English">ENGLISH</option>
                 <option value="Spanish">ESPAÑOL</option>
-                <option value="French">FRANÇAIS</option>
-                <option value="Japanese">日本語</option>
+                <option value="Chinese">中文</option>
               </select>
            </div>
 

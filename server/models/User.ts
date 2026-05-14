@@ -37,6 +37,14 @@ export interface IUser extends Document {
   isPremium?: boolean;
   favorites?: string[];
   skipped?: string[];
+  level?: number;
+  xp?: number;
+  frins?: number;
+  wins?: number;
+  losses?: number;
+  matchesPlayed?: number;
+  reputation?: number;
+  achievements?: string[];
   preferences?: {
     minAge?: number;
     maxAge?: number;
@@ -68,6 +76,14 @@ const UserSchema: Schema = new Schema({
   isPremium: { type: Boolean, default: false },
   favorites: [{ type: String }],
   skipped: [{ type: String }],
+  level: { type: Number, default: 1 },
+  xp: { type: Number, default: 0 },
+  frins: { type: Number, default: 100 },
+  wins: { type: Number, default: 0 },
+  losses: { type: Number, default: 0 },
+  matchesPlayed: { type: Number, default: 0 },
+  reputation: { type: Number, default: 0 },
+  achievements: [{ type: String }],
   preferences: {
     minAge: { type: Number },
     maxAge: { type: Number },

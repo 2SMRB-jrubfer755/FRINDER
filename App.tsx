@@ -79,6 +79,39 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     uploadPhoto: 'Subir Foto',
     addYourOwnAvatar: 'Añade Tu Propio Avatar',
     gamingAvatars: 'Avatares Gaming'
+  },
+  Chinese: {
+    discover: '发现',
+    squads: '小队',
+    chats: '聊天',
+    trophies: '奖杯',
+    settings: '设置',
+    config: '配置',
+    configSub: '自定义你的游戏体验',
+    profileDetails: '个人资料详情',
+    appPrefs: '应用偏好设置',
+    appLanguage: '应用语言',
+    langSub: '界面和翻译',
+    pushNotifs: '推送通知',
+    notifSub: '匹配提醒和小队更新',
+    displayName: '显示名称',
+    discordTag: 'Discord 标签',
+    saveChanges: '保存更改',
+    logout: '登出',
+    settingsSaved: '设置保存成功！',
+    squadsSub: '加入组织的团队和社区',
+    me: '我',
+    premiumTitle: 'Frinder 金牌',
+    premiumSub: '解锁您的真实潜力',
+    onboardingTitle: '升级你的生活',
+    onboardingSub: '注册以找到你的完美队伍',
+    theme: '主题',
+    darkMode: '暗黑模式',
+    lightMode: '浅色模式',
+    avatar: '头像',
+    uploadPhoto: '上传照片',
+    addYourOwnAvatar: '添加你自己的头像',
+    gamingAvatars: '游戏头像'
   }
 };
 
@@ -130,22 +163,24 @@ const App: React.FC = () => {
           // get profile from backend
           try {
             const profile = await api.users.getById(session.userId);
-            setUserProfile(prev => ({
-              ...prev,
-              name: profile.name || prev.name,
-              avatar: profile.avatar || prev.avatar,
-              discord: profile.discord || prev.discord,
-              language: profile.language || prev.language,
-              notifications: typeof profile.notifications === 'boolean' ? profile.notifications : prev.notifications,
-              theme: profile.theme || prev.theme,
-              isPremium: profile.isPremium || prev.isPremium,
-              preferences: {
-                ...prev.preferences,
-                ageRange: [profile.preferences?.minAge || prev.preferences.ageRange[0], profile.preferences?.maxAge || prev.preferences.ageRange[1]],
-                distanceMax: profile.preferences?.distanceMax || prev.preferences.distanceMax,
-                favoriteGames: profile.preferences?.favoriteGames || prev.preferences.favoriteGames,
-              }
-            }));
+            if (profile && typeof profile === 'object') {
+              setUserProfile(prev => ({
+                ...prev,
+                name: profile.name || prev.name,
+                avatar: profile.avatar || prev.avatar,
+                discord: profile.discord || prev.discord,
+                language: profile.language || prev.language,
+                notifications: typeof profile.notifications === 'boolean' ? profile.notifications : prev.notifications,
+                theme: profile.theme || prev.theme,
+                isPremium: profile.isPremium || prev.isPremium,
+                preferences: {
+                  ...prev.preferences,
+                  ageRange: [profile.preferences?.minAge || prev.preferences.ageRange[0], profile.preferences?.maxAge || prev.preferences.ageRange[1]],
+                  distanceMax: profile.preferences?.distanceMax || prev.preferences.distanceMax,
+                  favoriteGames: profile.preferences?.favoriteGames || prev.preferences.favoriteGames,
+                }
+              }));
+            }
           } catch (profileErr) {
             console.error('Failed to fetch user profile after session validation', profileErr);
           }
@@ -181,20 +216,36 @@ const App: React.FC = () => {
     const fetchData = async () => {
       try {
         const fetchedUsers = await api.users.getAll();
-        setUsers(fetchedUsers);
+        if (Array.isArray(fetchedUsers)) {
+          setUsers(fetchedUsers);
+        } else {
+          console.error('Invalid users response:', fetchedUsers);
+          setUsers([]);
+        }
 
         const fetchedGroups = await api.groups.getAll();
-        setGroups(fetchedGroups);
+        if (Array.isArray(fetchedGroups)) {
+          setGroups(fetchedGroups);
+        } else {
+          console.error('Invalid groups response:', fetchedGroups);
+          setGroups([]);
+        }
 
         if (currentUserId) {
           const fetchedChats = await api.chats.getByUserId(currentUserId);
-          setChats(fetchedChats);
+          if (Array.isArray(fetchedChats)) {
+            setChats(fetchedChats);
+          } else {
+            setChats([]);
+          }
         } else {
           setChats([]);
         }
       } catch (error) {
         console.error("Failed to fetch data from backend", error);
-        // Do not fallback to local mocks - keep empty arrays so data is consistent with backend
+        setUsers([]);
+        setGroups([]);
+        setChats([]);
       }
     };
 
@@ -213,8 +264,12 @@ const App: React.FC = () => {
     if (!currentUserId) return addNotification('Please login to request entrance', 'error');
     try {
       const updatedGroup = await api.groups.join(groupId);
-      setGroups(prev => prev.map(g => g._id === updatedGroup._id ? updatedGroup : g));
-      addNotification('Entrance request processed', 'success');
+      if (updatedGroup && updatedGroup._id) {
+        setGroups(prev => prev.map(g => g._id === updatedGroup._id ? updatedGroup : g));
+        addNotification('Entrance request processed', 'success');
+      } else {
+        throw new Error('Invalid group response');
+      }
     } catch (err) {
       console.error('Failed to request entrance', err);
       addNotification('No se pudo solicitar entrada. Inténtalo de nuevo.', 'error');
@@ -242,29 +297,38 @@ const App: React.FC = () => {
           password: data.password,
         });
 
+        if (!loggedUser) {
+          throw new Error('Login failed: No user data returned');
+        }
+
         const loggedUserId = loggedUser.id || loggedUser._id;
+        if (!loggedUserId) {
+          throw new Error('Login failed: User has no ID');
+        }
         if (loggedUserId) {
           // Create session after successful login
           await api.session.create(loggedUserId);
           setCurrentUserId(loggedUserId);
         }
 
-        setUserProfile(prev => ({
-          ...prev,
-          name: loggedUser.name || prev.name,
-          avatar: loggedUser.avatar || prev.avatar,
-          discord: loggedUser.discord || prev.discord,
-          language: loggedUser.language || prev.language,
-          notifications: typeof loggedUser.notifications === 'boolean' ? loggedUser.notifications : prev.notifications,
-          theme: loggedUser.theme || prev.theme,
-          isPremium: loggedUser.isPremium || prev.isPremium,
-          preferences: {
-            ...prev.preferences,
-            ageRange: [loggedUser.preferences?.minAge || prev.preferences.ageRange[0], loggedUser.preferences?.maxAge || prev.preferences.ageRange[1]],
-            distanceMax: loggedUser.preferences?.distanceMax || prev.preferences.distanceMax,
-            favoriteGames: loggedUser.preferences?.favoriteGames || prev.preferences.favoriteGames,
-          },
-        }));
+        if (loggedUser && typeof loggedUser === 'object') {
+          setUserProfile(prev => ({
+            ...prev,
+            name: loggedUser.name || prev.name,
+            avatar: loggedUser.avatar || prev.avatar,
+            discord: loggedUser.discord || prev.discord,
+            language: loggedUser.language || prev.language,
+            notifications: typeof loggedUser.notifications === 'boolean' ? loggedUser.notifications : prev.notifications,
+            theme: loggedUser.theme || prev.theme,
+            isPremium: loggedUser.isPremium || prev.isPremium,
+            preferences: {
+              ...prev.preferences,
+              ageRange: [loggedUser.preferences?.minAge || prev.preferences.ageRange[0], loggedUser.preferences?.maxAge || prev.preferences.ageRange[1]],
+              distanceMax: loggedUser.preferences?.distanceMax || prev.preferences.distanceMax,
+              favoriteGames: loggedUser.preferences?.favoriteGames || prev.preferences.favoriteGames,
+            },
+          }));
+        }
 
         setAppState('main');
       } catch (err: any) {
@@ -305,17 +369,24 @@ const App: React.FC = () => {
     try {
       const createdUser = await api.users.create(newUserHelper);
       console.log("User created:", createdUser);
-      const createdUserId = createdUser.id || createdUser._id;
-      if (createdUserId) {
-        // Create session after successful registration
-        await api.session.create(createdUserId);
-        setCurrentUserId(createdUserId);
+      
+      if (!createdUser || typeof createdUser !== 'object') {
+        throw new Error('User creation failed: No user data returned');
       }
+      
+      const createdUserId = createdUser.id || createdUser._id;
+      if (!createdUserId) {
+        throw new Error('User creation failed: User has no ID');
+      }
+      
+      // Create session after successful registration
+      await api.session.create(createdUserId);
+      setCurrentUserId(createdUserId);
 
       setUserProfile(prev => ({
         ...prev,
-        name: createdUser.name,
-        avatar: createdUser.avatar,
+        name: createdUser.name || prev.name,
+        avatar: createdUser.avatar || prev.avatar,
         theme: createdUser.theme || prev.theme,
         isPremium: createdUser.isPremium || prev.isPremium,
         preferences: {
@@ -335,12 +406,18 @@ const App: React.FC = () => {
 
   const handleMatch = async (user: User) => {
     try {
-      const existingChat = chats.find(c => c.participants.includes(user.id));
+      if (!user || !user.id || !currentUserId) {
+        throw new Error('Invalid user or missing current user ID');
+      }
+      const existingChat = chats && chats.find(c => c && c.participants && c.participants.includes(user.id));
       if (!existingChat) {
         const savedChat = await api.chats.sendMessage({
-          participants: [currentUserId || 'me', user.id],
+          participants: [currentUserId, user.id],
           message: null
         });
+        if (!savedChat || (!savedChat._id && !savedChat.id)) {
+          throw new Error('Failed to create chat: no chat ID returned');
+        }
         setChats(prev => [savedChat, ...prev]);
         setActiveChatId((savedChat as any)._id || (savedChat as any).id);
       }
@@ -352,12 +429,16 @@ const App: React.FC = () => {
   };
 
   const handleSendMessage = (chatId: string, message: Message, updatedChat?: Chat) => {
-    setChats(prev => prev.map(chat => {
-      if ((chat as any)._id === chatId || (chat as any).id === chatId) {
+    setChats(prev => prev && prev.map(chat => {
+      if (chat && ((chat as any)._id === chatId || (chat as any).id === chatId)) {
         if (updatedChat) {
           return updatedChat;
         }
-        return { ...chat, messages: [...chat.messages, message] };
+        if (chat.messages) {
+          return { ...chat, messages: [...chat.messages, message] };
+        } else {
+          return { ...chat, messages: [message] };
+        }
       }
       return chat;
     }));
@@ -449,7 +530,7 @@ const App: React.FC = () => {
       case 'discover': return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} currentUserId={currentUserId} onNotification={addNotification} />;
       case 'chat': return <ChatList users={users} chats={chats} currentUserId={currentUserId} onSelectChat={setActiveChatId} onNotification={addNotification} />;
       case 'groups': return <Groups groups={groups} users={users} currentUserId={currentUserId} onAddGroup={handleAddGroup} onRequestEntrance={handleRequestEntrance} t={t} onNotification={addNotification} />;
-      case 'rewards': return <Rewards currentUserId={currentUserId} onNotification={addNotification} />;
+      case 'rewards': return <Rewards currentUserId={currentUserId} userProfile={userProfile} onNotification={addNotification} />;
       case 'settings': return <Settings userProfile={userProfile} onUpdateProfile={handleUpdateProfile} t={t} onShowPremium={() => setShowPremium(true)} theme={userProfile.theme} onThemeChange={(newTheme) => setUserProfile(prev => ({ ...prev, theme: newTheme }))} onLogout={handleLogout} onBack={() => setActiveTab('discover')} onNotification={addNotification} />;
       default: return <Discover onMatch={handleMatch} preferences={userProfile.preferences} users={users} currentUserId={currentUserId} />;
     }

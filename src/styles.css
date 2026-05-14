@@ -1,7 +1,7 @@
 /* Base styles */
 body {
   font-family: 'Outfit', sans-serif;
-  background-color: #322626;
+  background-color: #0f0f0f;
   color: #F2D78C;
   margin: 0;
   overflow-x: hidden;
@@ -19,7 +19,7 @@ body {
 }
 
 ::-webkit-scrollbar-track {
-  background: #322626;
+  background: #0f0f0f;
 }
 
 ::-webkit-scrollbar-thumb {
@@ -29,10 +29,10 @@ body {
 
 /* Glass effect */
 .glass {
-  background: rgba(50, 38, 38, 0.7);
+  background: rgba(30, 30, 30, 0.8);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(242, 215, 140, 0.15);
+  border: 1px solid rgba(242, 215, 140, 0.2);
 }
 
 /* Card depth */

@@ -22,21 +22,25 @@ const ChatList: React.FC<ChatListProps> = ({ users, chats, currentUserId, onSele
 
       {/* New Matches Row */}
       <div className="flex space-x-4 overflow-x-auto pb-4 no-scrollbar">
-        {users.slice(0, 5).map(user => (
-          <button key={user.id} onClick={() => setProfileUser(user)} className="flex-shrink-0 text-center space-y-2 group cursor-pointer">
-            <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full p-[2px] bg-gradient-to-tr from-primary to-accent group-hover:scale-105 transition-transform">
-              <img 
-                src={user.avatar} 
-                className="w-full h-full rounded-full object-cover border-4 border-secondary"
-                alt={user.name}
-              />
-              {user.isOnline && (
-                <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-secondary rounded-full" />
-              )}
-            </div>
-            <p className="text-xs font-bold text-accent/80 truncate w-20">{user.name.split(' ')[0]}</p>
-          </button>
-        ))}
+        {users.slice(0, 5).map(user => {
+          const userId = user.id || (user as any)._id;
+          if (!userId) return null;
+          return (
+            <button key={userId} onClick={() => setProfileUser(user)} className="flex-shrink-0 text-center space-y-2 group cursor-pointer">
+              <div className="relative w-16 h-16 md:w-20 md:h-20 rounded-full p-[2px] bg-gradient-to-tr from-primary to-accent group-hover:scale-105 transition-transform">
+                <img 
+                  src={user.avatar} 
+                  className="w-full h-full rounded-full object-cover border-4 border-secondary"
+                  alt={user.name}
+                />
+                {user.isOnline && (
+                  <div className="absolute bottom-1 right-1 w-4 h-4 bg-green-500 border-2 border-secondary rounded-full" />
+                )}
+              </div>
+              <p className="text-xs font-bold text-accent/80 truncate w-20">{user.name.split(' ')[0]}</p>
+            </button>
+          );
+        })}
       </div>
 
       {profileUser && (
@@ -77,7 +81,8 @@ const ChatList: React.FC<ChatListProps> = ({ users, chats, currentUserId, onSele
       <div className="space-y-2">
         {chats.map(chat => {
           const chatId = (chat as any)._id || (chat as any).id;
-          const participantId = chat.participants[0]; // Simplified for demo
+          const participantId = chat?.participants?.[0]; // Check array exists
+          if (!participantId) return null;
           const user = users.find(u => u.id === participantId || (u as any)._id === participantId);
           if (!user) return null;
 
@@ -94,8 +99,8 @@ const ChatList: React.FC<ChatListProps> = ({ users, chats, currentUserId, onSele
                   <span className="text-[10px] text-accent/40 font-bold uppercase tracking-widest">Now</span>
                 </div>
                 <p className="text-accent/60 text-sm truncate max-w-[200px]">
-                  {chat.messages.length > 0 
-                    ? chat.messages[chat.messages.length - 1].text 
+                  {chat?.messages?.length > 0 
+                    ? chat.messages[chat.messages.length - 1]?.text 
                     : `Matched! Say hi to ${user.name}`}
                 </p>
               </div>

@@ -37,7 +37,8 @@ router.post('/login', async (req, res) => {
             return res.status(401).json({ message: 'Incorrect password' });
         }
 
-        const userObj = user.toObject();
+        const userObj = user.toObject ? user.toObject() : JSON.parse(JSON.stringify(user));
+        userObj.id = userObj._id; // Ensure both id and _id are present
         delete (userObj as any).password;
         res.json(userObj);
     } catch (error) {
@@ -85,7 +86,16 @@ router.post('/', async (req, res) => {
         }
         const newUser = new User(req.body);
         const savedUser = await newUser.save();
-        res.status(201).json(savedUser);
+        
+        if (!savedUser || !savedUser._id) {
+            return res.status(500).json({ message: 'Failed to save user' });
+        }
+        
+        // Return user without password
+        const userObj = savedUser.toObject ? savedUser.toObject() : JSON.parse(JSON.stringify(savedUser));
+        userObj.id = userObj._id; // Ensure both id and _id are present
+        delete (userObj as any).password;
+        res.status(201).json(userObj);
     } catch (error) {
         res.status(400).json({ message: 'Error creating user', error });
     }
@@ -172,6 +182,109 @@ router.post('/:id/skip/:targetUserId', async (req: AuthenticatedRequest, res) =>
         res.json(user);
     } catch (error) {
         res.status(400).json({ message: 'Error skipping user', error });
+    }
+});
+
+// ADD XP to user (internal - for achievements, matches, etc)
+router.post('/:id/xp', async (req: AuthenticatedRequest, res) => {
+    try {
+        const userId = req.params.id;
+        const { amount, reason } = req.body;
+        if (req.userId !== userId) return res.status(403).json({ message: 'Unauthorized' });
+        
+        if (!amount || typeof amount !== 'number' || amount <= 0) {
+            return res.status(400).json({ message: 'Invalid XP amount' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.xp = (user.xp || 0) + amount;
+        
+        // Check for level up (100 XP per level)
+        const newLevel = Math.floor(user.xp / 100) + 1;
+        if (newLevel > (user.level || 1)) {
+            user.level = newLevel;
+            user.frins = (user.frins || 0) + (newLevel * 50); // Bonus Frins on levelup
+        }
+
+        await user.save();
+        res.json({ user, leveledUp: newLevel > (user.level || 1), newLevel });
+    } catch (error) {
+        res.status(400).json({ message: 'Error adding XP', error });
+    }
+});
+
+// ADD Frins to user (internal - for rewards)
+router.post('/:id/frins', async (req: AuthenticatedRequest, res) => {
+    try {
+        const userId = req.params.id;
+        const { amount, reason } = req.body;
+        if (req.userId !== userId) return res.status(403).json({ message: 'Unauthorized' });
+        
+        if (!amount || typeof amount !== 'number') {
+            return res.status(400).json({ message: 'Invalid Frins amount' });
+        }
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.frins = (user.frins || 0) + amount;
+        await user.save();
+        res.json(user);
+    } catch (error) {
+        res.status(400).json({ message: 'Error adding Frins', error });
+    }
+});
+
+// RECORD match result
+router.post('/:id/match', async (req: AuthenticatedRequest, res) => {
+    try {
+        const userId = req.params.id;
+        const { won, frinsReward } = req.body;
+        if (req.userId !== userId) return res.status(403).json({ message: 'Unauthorized' });
+
+        const user = await User.findById(userId);
+        if (!user) return res.status(404).json({ message: 'User not found' });
+
+        user.matchesPlayed = (user.matchesPlayed || 0) + 1;
+        if (won) {
+            user.wins = (user.wins || 0) + 1;
+            user.xp = (user.xp || 0) + 50;
+        } else {
+            user.losses = (user.losses || 0) + 1;
+            user.xp = (user.xp || 0) + 25;
+        }
+
+        if (frinsReward) {
+            user.frins = (user.frins || 0) + frinsReward;
+        }
+
+        // Check level up
+        const newLevel = Math.floor(user.xp / 100) + 1;
+        if (newLevel > (user.level || 1)) {
+            user.level = newLevel;
+            user.frins = (user.frins || 0) + (newLevel * 50);
+        }
+
+        await user.save();
+        res.json(user);
+    } catch (error) {
+        res.status(400).json({ message: 'Error recording match', error });
+    }
+});
+
+// GET leaderboard
+router.get('/leaderboard/top', async (req, res) => {
+    try {
+        const limit = parseInt(req.query.limit as string) || 10;
+        const leaderboard = await User.find()
+            .sort({ level: -1, xp: -1 })
+            .limit(limit)
+            .select('name avatar level xp wins losses frins');
+        res.json(leaderboard);
+    } catch (error) {
+        res.status(500).json({ message: 'Error fetching leaderboard', error });
     }
 });
 
