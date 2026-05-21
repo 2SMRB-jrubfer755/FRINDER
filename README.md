@@ -39,12 +39,10 @@ Frinder — encuentra a las personas que encajan contigo.
 
 ### Despliegue Rápido
 ```bash
-npm run docker:clean
-npm run docker:build
-npm run docker:up
+Arrancar contenedores: docker compose -d
+Nueva version: docker compose -d --build
+Eliminar contenedores: docker compose dowm
 ```
 
 - **Frontend**: http://localhost:3000
 - **Backend API**: http://localhost:5000
-
-**[📖 Guía Completa de Docker](./DOCKER_SETUP.md)** - Troubleshooting, logs, y más información
